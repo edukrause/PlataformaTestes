@@ -1,0 +1,25 @@
+%%{init: {"theme":"neutral","flowchart":{"curve":"linear","nodeSpacing":40,"rankSpacing":60,"wrappingWidth":260},"themeVariables":{"fontFamily":"Arial","fontSize":"16px"}}}%%
+flowchart TB
+    AN(["Analista de qualidade"])
+
+    subgraph EMP["Rede interna da empresa"]
+        direction TB
+        PT["<b>PlataformaTestes</b><br/>executada localmente pelo analista"]
+        ERP["<b>ERP em homologação</b><br/>aplicação usada para executar os testes"]
+        DB[("MySQL de homologação<br/>≈ 125 tabelas")]
+        ERP <-->|"leitura e escrita"| DB
+        PT -->|"somente leitura · catálogo, EXPLAIN e SELECT"| DB
+    end
+
+    subgraph SAAS["Serviços acessados por API"]
+        direction LR
+        JIRA[["Jira<br/>tarefas e requisitos"]]
+        CONF[["Confluence<br/>documentação funcional"]]
+        LLM[["Provedores de modelos<br/>Anthropic · Google · Groq"]]
+    end
+
+    AN -->|"informa a tarefa e confere a saída"| PT
+    AN -->|"executa o teste"| ERP
+    PT -->|"lê o requisito"| JIRA
+    PT -->|"lê a documentação"| CONF
+    PT -->|"apenas conteúdo filtrado; resultados nunca saem"| LLM

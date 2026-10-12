@@ -22,20 +22,21 @@ Ordem = prioridade. Estimativas em horas; nenhum item passa de 8 h.
 | B15 | Normalizador: ordenação, arredondamento, nulos e datas | 6 | MVP | E7 |  | a fazer |
 | B16 | Motor de consenso e classificação do desfecho | 4 | MVP | E7 |  | a fazer |
 | B17 | Extração do esquema pelo INFORMATION_SCHEMA e grafo de chaves estrangeiras | 6 | MVP | E7 |  | a fazer |
-| B18 | Amostrador de valores, com lista de bloqueio para colunas de dados pessoais | 5 | MVP | E7 |  | a fazer |
-| B19 | Cliente do Confluence: obter a página da rotina e convertê-la em texto | 6 | MVP | E8 |  | a fazer |
-| B20 | Documentação funcional no prompt, com cenários de regressão | 6 | MVP | E8 |  | a fazer |
-| B21 | Validação com o analisador Gherkin e uma regeneração em caso de erro | 4 | MVP | E8 |  | a fazer |
-| B22 | Classificador: o requisito exige apuração de valores? | 4 | MVP | E8 |  | a fazer |
-| B23 | Restrições de domínio obrigatórias no prompt (empresa, filial, cancelados, exclusão lógica) | 4 | MVP | E8 |  | a fazer |
-| B24 | Seleção do subesquema por similaridade de termos e expansão pelos relacionamentos | 8 | MVP | TCC II |  | a fazer |
-| B25 | Tela de revisão: aceitar, aceitar com alteração ou rejeitar, com registro de tempo | 6 | MVP | TCC II |  | a fazer |
-| B26 | Exibição do desfecho e da consulta de cada modelo | 4 | MVP | TCC II |  | a fazer |
-| B27 | Execução em lote sobre o conjunto de referência | 6 | MVP | TCC II |  | a fazer |
-| B28 | Exportação das métricas em CSV | 3 | MVP | TCC II |  | a fazer |
-| B29 | Registro dos cenários aprovados de volta na tarefa do Jira | 6 | Desejável | — |  | a fazer |
-| B30 | Cache do esquema e das amostras entre execuções | 4 | Desejável | — |  | a fazer |
-| B31 | Painel de custos por provedor | 4 | Desejável | — |  | a fazer |
-| B32 | Incorporação das alterações de código vinculadas à tarefa | 8 | Desejável | Futuro |  | a fazer |
+| B18 | Amostrador de valores restrito à lista de colunas permitidas | 5 | MVP | E7 |  | a fazer |
+| B19 | Filtro de saída no gateway: pseudonimização de dados pessoais no requisito, na documentação e nas mensagens de erro | 5 | MVP | E7 |  | a fazer |
+| B20 | Cliente do Confluence: obter a página da rotina e convertê-la em texto | 6 | MVP | E8 |  | a fazer |
+| B21 | Documentação funcional no prompt, com cenários de regressão | 6 | MVP | E8 |  | a fazer |
+| B22 | Validação com o analisador Gherkin e uma regeneração em caso de erro | 4 | MVP | E8 |  | a fazer |
+| B23 | Classificador: o requisito exige apuração de valores? | 4 | MVP | E8 |  | a fazer |
+| B24 | Restrições de domínio obrigatórias no prompt (empresa, filial, cancelados, exclusão lógica) | 4 | MVP | E8 |  | a fazer |
+| B25 | Seleção do subesquema por similaridade de termos e expansão pelos relacionamentos | 8 | MVP | TCC II |  | a fazer |
+| B26 | Tela de revisão: aceitar, aceitar com alteração ou rejeitar, com registro de tempo | 6 | MVP | TCC II |  | a fazer |
+| B27 | Exibição do desfecho e da consulta de cada modelo | 4 | MVP | TCC II |  | a fazer |
+| B28 | Execução em lote sobre o conjunto de referência | 6 | MVP | TCC II |  | a fazer |
+| B29 | Exportação das métricas em CSV | 3 | MVP | TCC II |  | a fazer |
+| B30 | Registro dos cenários aprovados de volta na tarefa do Jira | 6 | Desejável | — |  | a fazer |
+| B31 | Cache do esquema e das amostras entre execuções | 4 | Desejável | — |  | a fazer |
+| B32 | Painel de custos por provedor | 4 | Desejável | — |  | a fazer |
+| B33 | Incorporação das alterações de código vinculadas à tarefa | 8 | Desejável | Futuro |  | a fazer |
 
-Fatia vertical: 34 h · MVP: 120 h · Desejáveis: 22 h
+Fatia vertical: 34 h · MVP: 125 h · Desejáveis: 22 h

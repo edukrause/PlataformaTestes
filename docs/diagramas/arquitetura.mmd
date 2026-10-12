@@ -11,7 +11,7 @@ flowchart TB
             CTX["<b>Coletor de contexto</b><br/>requisito + documentação da rotina"]
             M1["<b>Módulo 1 · Geração de cenários</b><br/>gerador de cenários<br/>validador Gherkin"]
             M2["<b>Módulo 2 · Apuração de valores</b><br/>classificador · seletor de subesquema · amostrador · gerador SQL (×3) · verificador em camadas · normalizador · motor de consenso"]
-            GW["<b>Gateway de modelos</b><br/>interface única · três adaptadores"]
+            GW["<b>Gateway de modelos</b><br/>interface única · três adaptadores · filtro de saída"]
             CMP["<b>Compositor de saída e registro de execuções</b><br/>cenário + valores + consulta anexada"]
             CTX --> M1
             CTX --> M2
