@@ -1,0 +1,16 @@
+# Java / Maven
+target/
+*.class
+# Node / front-end
+node_modules/
+dist/
+# Base local da plataforma (H2)
+*.mv.db
+*.trace.db
+# Credenciais — nunca versionar
+.env
+application-local.yml
+# IDE
+.idea/
+.vscode/
+*.iml
