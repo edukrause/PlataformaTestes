@@ -1,0 +1,66 @@
+%%{init: {"theme":"neutral","themeVariables":{"fontFamily":"Arial","fontSize":"18px"}}}%%
+erDiagram
+    TAREFA ||--o{ EXECUCAO : "origina"
+    EXECUCAO ||--|{ CENARIO : "produz"
+    EXECUCAO ||--o{ APURACAO : "contém"
+    CENARIO |o--o{ APURACAO : "recebe valor de"
+    APURACAO ||--|{ CANDIDATO_SQL : "reúne"
+    EXECUCAO ||--o{ REVISAO : "é conferida em"
+
+    TAREFA {
+        bigint id PK
+        varchar chave_jira UK
+        varchar area "ESTOQUE | VENDAS"
+        text requisito
+        varchar documentacao_ref
+        char hash_documentacao
+        timestamp coletada_em
+    }
+    EXECUCAO {
+        bigint id PK
+        bigint tarefa_id FK
+        varchar versao_prompt
+        varchar status
+        bigint tempo_total_ms
+        decimal custo_total_usd
+        timestamp iniciada_em
+    }
+    CENARIO {
+        bigint id PK
+        bigint execucao_id FK
+        varchar tipo "ALTERACAO | REGRESSAO"
+        text gherkin
+        boolean sintaxe_valida
+    }
+    APURACAO {
+        bigint id PK
+        bigint execucao_id FK
+        bigint cenario_id FK
+        text pergunta
+        text subesquema
+        varchar desfecho "UNANIME | MAIORIA | DIVERGENTE | FALHA"
+        text resultado_referencia
+    }
+    CANDIDATO_SQL {
+        bigint id PK
+        bigint apuracao_id FK
+        varchar provedor "CLAUDE | GEMINI | LLAMA"
+        varchar modelo
+        int tentativa
+        text consulta
+        varchar verificacao
+        char hash_resultado
+        int tokens_entrada
+        int tokens_saida
+        decimal custo_usd
+        bigint latencia_ms
+    }
+    REVISAO {
+        bigint id PK
+        bigint execucao_id FK
+        varchar analista
+        varchar decisao "ACEITO | ACEITO_ALTERACAO | REJEITADO"
+        int valores_alterados
+        bigint tempo_revisao_s
+        text comentario
+    }

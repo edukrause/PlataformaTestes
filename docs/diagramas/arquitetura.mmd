@@ -1,0 +1,42 @@
+%%{init: {"theme":"neutral","flowchart":{"curve":"linear","nodeSpacing":26,"rankSpacing":42,"padding":10,"wrappingWidth":300},"themeVariables":{"fontFamily":"Arial","fontSize":"16px"}}}%%
+flowchart TB
+    AN(["Analista de qualidade"])
+
+    subgraph LOCAL["Artefato executável único · execução local na rede interna"]
+        direction TB
+        UI["<b>Interface web · React</b><br/>informa a tarefa · revisa cenários, valores e consultas · registra a decisão"]
+
+        subgraph ORQ["Camada de orquestração · Java / Spring Boot"]
+            direction TB
+            CTX["<b>Coletor de contexto</b><br/>requisito + documentação da rotina"]
+            M1["<b>Módulo 1 · Geração de cenários</b><br/>gerador de cenários<br/>validador Gherkin"]
+            M2["<b>Módulo 2 · Apuração de valores</b><br/>classificador · seletor de subesquema · amostrador · gerador SQL (×3) · verificador em camadas · normalizador · motor de consenso"]
+            GW["<b>Gateway de modelos</b><br/>interface única · três adaptadores"]
+            CMP["<b>Compositor de saída e registro de execuções</b><br/>cenário + valores + consulta anexada"]
+            CTX --> M1
+            CTX --> M2
+            M1 -.-> GW
+            M2 -.-> GW
+            M1 --> CMP
+            M2 --> CMP
+        end
+
+        DBL[("Base local · H2 em arquivo")]
+    end
+
+    subgraph EXT["Sistemas externos"]
+        direction LR
+        JIRA[["Jira<br/>requisito da tarefa"]]
+        CONF[["Confluence<br/>documentação funcional"]]
+        LLM[["Provedores de modelos<br/>Anthropic · Google · Groq"]]
+        ERP[("MySQL · homologação do ERP<br/>usuário somente leitura")]
+    end
+
+    AN <--> UI
+    UI <-->|"REST / JSON"| CTX
+    CMP --> UI
+    CMP --> DBL
+    CTX -->|"REST"| JIRA
+    CTX -->|"REST"| CONF
+    GW -->|"HTTPS"| LLM
+    M2 -->|"catálogo · EXPLAIN · SELECT com limite de tempo e linhas"| ERP

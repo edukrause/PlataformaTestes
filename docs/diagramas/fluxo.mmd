@@ -1,0 +1,25 @@
+%%{init: {"theme":"neutral","flowchart":{"curve":"linear","nodeSpacing":22,"rankSpacing":34,"wrappingWidth":230},"themeVariables":{"fontFamily":"Arial","fontSize":"16px"}}}%%
+flowchart LR
+    subgraph G["1 · Contexto e cenários"]
+        direction TB
+        A(["Analista informa a chave da tarefa"]) --> B["Coleta o requisito (Jira) e a documentação da rotina (Confluence)"]
+        B --> C["Gera os cenários Gherkin e valida a sintaxe (uma regeneração em caso de erro)"]
+        C --> D{"Envolve relatório ou consulta?"}
+    end
+    subgraph AP["2 · Apuração do valor esperado"]
+        direction TB
+        F["Seleciona o subesquema e compõe a amostra de valores"] --> H["Claude, Gemini e Llama geram a consulta de forma independente"]
+        H --> I["Verificação: SELECT · EXPLAIN · execução; erro ou vazio → nova tentativa → descarte"]
+        I --> L["Normaliza os conjuntos de resultado"]
+        L --> M{"Ao menos 2 resultados coincidem?"}
+        M -- "sim" --> N["Valor de referência (unânime ou maioria)"]
+        M -- "não" --> O["Divergente ou falha: sem valor de referência"]
+    end
+    subgraph SA["3 · Saída e conferência"]
+        direction TB
+        R["Compõe a saída: cenários, valores e consultas anexadas"] --> S["Analista confere: aceita, aceita com alteração menor ou rejeita"]
+        S --> T(["Decisão, tempos e custos registrados"])
+    end
+    G -- "sim" --> AP
+    G -- "não" --> SA
+    AP --> SA
