@@ -30,7 +30,8 @@ como referência quando ao menos dois resultados coincidem. A conferência do an
 
 ## Telas
 
-O protótipo da interface está em [`frontend`](frontend) e roda com dados simulados:
+O protótipo da interface está em [`frontend`](frontend) e roda com dados simulados. Dá para abrir direto
+no navegador: **https://edukrause.github.io/PlataformaTestes/**
 
 - **Assistente**: conversa para pedir a geração dos cenários de uma tarefa;
 - **Execuções**: histórico com busca e filtros;

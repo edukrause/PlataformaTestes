@@ -57,6 +57,13 @@ Para ligar no Spring Boot, o back-end precisa expor os endpoints abaixo com os m
 Nos cenários, o marcador `«A<id>»` dentro do texto Gherkin indica onde entra o valor da apuração de mesmo id.
 A tela troca o marcador pelo valor de referência ou, quando não há consenso, por um aviso de "valor a apurar".
 
+## GitHub Pages
+
+A cada push na `main` que mexa em `frontend/`, o workflow `.github/workflows/pages.yml` gera o build com
+`GITHUB_PAGES=true` (base `/PlataformaTestes/`) e publica em https://edukrause.github.io/PlataformaTestes/,
+sempre com os dados simulados. O `404.html` é uma cópia do `index.html`, para as rotas funcionarem ao recarregar
+a página.
+
 ## Build
 
 `npm run build` gera `dist/`. No item B01 esse resultado passa a ser copiado para os recursos estáticos do
