@@ -1,4 +1,4 @@
-import type { Area, Celula, Decisao, Desfecho, Etapa, Provedor, Tabela, Verificacao } from '../api'
+import type { Area, Celula, Decisao, Desfecho, Etapa, Provedor, StatusDemanda, Tabela, Verificacao } from '../api'
 
 export const ROTULO_DESFECHO: Record<Desfecho, string> = {
   UNANIME: 'Unânime',
@@ -18,6 +18,15 @@ export const ROTULO_DECISAO: Record<Decisao, string> = {
   ACEITO: 'Aceito',
   ACEITO_ALTERACAO: 'Aceito com alteração',
   REJEITADO: 'Rejeitado',
+}
+
+export const ROTULO_STATUS_DEMANDA: Record<StatusDemanda, string> = {
+  A_FAZER: 'A fazer',
+  EM_DESENVOLVIMENTO: 'Em desenvolvimento',
+  AGUARDANDO_TESTE: 'Aguardando teste',
+  EM_TESTE: 'Em teste',
+  REPROVADA: 'Reprovada no teste',
+  FINALIZADA: 'Finalizada',
 }
 
 export const ROTULO_PROVEDOR: Record<Provedor, string> = {
@@ -65,6 +74,20 @@ export function valorNoGherkin(t: Tabela): string {
 }
 
 export const dataHora = (iso: string) => fmtDataHora.format(new Date(iso))
+
+const fmtData = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' })
+
+/** Data sem hora; aceita yyyy-mm-dd (lido como data local, sem deslocar o fuso). */
+export const data = (iso: string) => fmtData.format(new Date(iso.length === 10 ? `${iso}T00:00:00` : iso))
+
+/** Dias corridos de hoje até a data (negativo quando já passou). */
+export function diasAte(iso: string): number {
+  const hoje = new Date()
+  hoje.setHours(0, 0, 0, 0)
+  return Math.round((new Date(`${iso.slice(0, 10)}T00:00:00`).getTime() - hoje.getTime()) / 86400000)
+}
+
+export const horas = (h: number) => `${String(h).replace('.', ',')} h`
 
 export const usd = (v: number) => `US$ ${v.toFixed(v < 0.01 ? 4 : 3).replace('.', ',')}`
 

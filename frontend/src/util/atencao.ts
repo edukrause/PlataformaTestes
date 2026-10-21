@@ -17,7 +17,7 @@ export function atencoes(e: ExecucaoResumo): Atencao[] {
   if (e.status !== 'CONCLUIDA') return r
   if (!e.decisao) r.push('A_CONFERIR')
   if (!e.decisao && e.desfechos.some((d) => d === 'DIVERGENTE' || d === 'FALHA')) r.push('SEM_REFERENCIA')
-  if (!e.usouDocumentacao) r.push('SEM_DOCUMENTACAO')
+  if (!e.documentacaoRef) r.push('SEM_DOCUMENTACAO')
   if (e.decisao === 'REJEITADO') r.push('REJEITADA')
   return r
 }
