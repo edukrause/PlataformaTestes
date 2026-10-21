@@ -16,13 +16,12 @@ export function GherkinView({ texto, valores }: { texto: string; valores: Valore
           return valor.split('\n').map((l, j) => (
             <div key={`${i}-${j}`}>
               {tabela[1]}
-              <a
-                href={`#apuracao-${tabela[2]}`}
-                title="Valores apurados. Clique para ver as consultas."
-                className="text-(--mint-400) hover:underline"
+              <span
+                title="Valores apurados."
+                className="text-(--mint-400)"
               >
                 {l}
-              </a>
+              </span>
             </div>
           ))
         }
@@ -64,24 +63,14 @@ function Trecho({ texto, valores }: { texto: string; valores: Valores }) {
           const id = Number(marcador[1])
           const v = valores[id]
           return v != null ? (
-            <a
+            <span
               key={i}
-              href={`#apuracao-${id}`}
-              title={`Valor apurado (apuração ${id}). Clique para ver as consultas.`}
+              title={`Valor apurado (apuração ${id}).`}
               className="rounded bg-(--mint-400)/15 px-1 text-(--mint-400) underline decoration-(--mint-400)/40 underline-offset-2 hover:bg-(--mint-400)/25"
             >
               {v}
-            </a>
-          ) : (
-            <a
-              key={i}
-              href={`#apuracao-${id}`}
-              title="Sem valor de referência: apure pelas consultas."
-              className="rounded bg-(--yellow-400)/15 px-1 text-(--yellow-300) underline decoration-(--yellow-400)/40 underline-offset-2"
-            >
-              ⚠ valor a apurar (A{id})
-            </a>
-          )
+            </span>
+          ) : null
         }
         if (p.startsWith('"')) return <span key={i} className="text-(--yellow-200)">{p}</span>
         return <Fragment key={i}>{p}</Fragment>

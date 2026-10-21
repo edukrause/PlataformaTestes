@@ -2,7 +2,8 @@ import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 
 import { Link } from 'react-router-dom'
 import { api, type Etapa, type Execucao, type Mensagem } from '../api'
 import { dataHora, ROTULO_ETAPA, usd, valorNoGherkin } from '../util/formato'
-import { GherkinView, type Valores } from './GherkinView'
+import { CasoTeste } from './CasoTeste'
+import type { Valores } from './GherkinView'
 import { Markdown } from './Markdown'
 import { SeloArea, SeloDesfecho } from './selos'
 import { Selo } from './ui'
@@ -184,7 +185,7 @@ function ExecucaoNoChat({ id, versao }: { id: number; versao: number }) {
                   </Selo>
                 </summary>
                 <div className="mt-2">
-                  <GherkinView texto={c.gherkin} valores={valores} />
+                  <CasoTeste numero={exec.cenarios.indexOf(c) + 1} cenario={c} valores={valores} />
                 </div>
               </details>
             ))}

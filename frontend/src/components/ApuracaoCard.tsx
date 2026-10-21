@@ -1,7 +1,7 @@
 import type { Apuracao, CandidatoSql } from '../api'
 import { DESCRICAO_DESFECHO, ROTULO_PROVEDOR, ROTULO_VERIFICACAO, segundos, usd } from '../util/formato'
 import { SeloDesfecho } from './selos'
-import { SqlView } from './SqlView'
+import { RelatorioConferencia } from './RelatorioConferencia'
 import { TabelaResultado } from './TabelaResultado'
 import { Card } from './ui'
 
@@ -9,12 +9,6 @@ import { Card } from './ui'
 const CORES_GRUPO = ['bg-sucesso-status', 'bg-info-status', 'bg-aviso-status', 'bg-rosa-status']
 
 export function ApuracaoCard({ apuracao, cenarioTitulo }: { apuracao: Apuracao; cenarioTitulo?: string }) {
-  const hashes = [...new Set(apuracao.candidatos.map((c) => c.hashResultado).filter(Boolean))] as string[]
-  const hashRef = apuracao.candidatos.find(
-    (c) => apuracao.resultadoReferencia && c.verificacao === 'VALIDO' &&
-      apuracao.candidatos.filter((o) => o.hashResultado === c.hashResultado).length >= 2,
-  )?.hashResultado
-
   return (
     <Card className="overflow-hidden">
       <div id={`apuracao-${apuracao.id}`} className="scroll-mt-6" />
@@ -47,6 +41,31 @@ export function ApuracaoCard({ apuracao, cenarioTitulo }: { apuracao: Apuracao; 
         </div>
       </div>
 
+      {apuracao.conferencia && (
+        <div className="border-t border-neutro-3 px-5 py-4">
+          <RelatorioConferencia relatorio={apuracao.conferencia} nomeArquivo={`conferencia-A${apuracao.id}`} />
+        </div>
+      )}
+
+    </Card>
+  )
+}
+
+/** O que cada modelo de IA respondeu para a apuração, mostrado à parte, no fim da tela. */
+export function ModelosApuracao({ apuracao }: { apuracao: Apuracao }) {
+  const hashes = [...new Set(apuracao.candidatos.map((c) => c.hashResultado).filter(Boolean))] as string[]
+  const hashRef = apuracao.candidatos.find(
+    (c) => apuracao.resultadoReferencia && c.verificacao === 'VALIDO' &&
+      apuracao.candidatos.filter((o) => o.hashResultado === c.hashResultado).length >= 2,
+  )?.hashResultado
+
+  return (
+    <Card className="overflow-hidden">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-5 py-3">
+        <span className="font-mono text-xs text-texto-sec">A{apuracao.id}</span>
+        <h3 className="min-w-0 flex-1 text-sm font-medium text-enfase">{apuracao.pergunta}</h3>
+        <SeloDesfecho desfecho={apuracao.desfecho} />
+      </div>
       <div className="grid gap-px border-t border-neutro-3 bg-neutro-2 md:grid-cols-3">
         {apuracao.candidatos.map((c) => (
           <Candidato
@@ -105,16 +124,6 @@ function Candidato({ c, corGrupo, concorda }: { c: CandidatoSql; corGrupo: strin
           {usd(c.custoUsd)} · {segundos(c.latenciaMs)}
         </dd>
       </dl>
-
-      <details className="group/sql mt-auto">
-        <summary className="cursor-pointer text-xs font-medium text-link select-none hover:underline">
-          <span className="group-open/sql:hidden">Ver consulta</span>
-          <span className="hidden group-open/sql:inline">Ocultar consulta</span>
-        </summary>
-        <div className="mt-2">
-          <SqlView sql={c.consulta} />
-        </div>
-      </details>
     </div>
   )
 }

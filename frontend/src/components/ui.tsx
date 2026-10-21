@@ -4,6 +4,11 @@ export function Card({ children, className = '' }: { children: ReactNode; classN
   return <section className={`rounded-lg border border-borda bg-superficie ${className}`}>{children}</section>
 }
 
+/** Moldura em volta de uma seção: borda e fundo levemente mais escuro, com os cartões dentro. */
+export function Painel({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return <div className={`rounded-lg border border-borda bg-fundo p-3 ${className}`}>{children}</div>
+}
+
 export function CardCabecalho({ titulo, sub, acao }: { titulo: ReactNode; sub?: ReactNode; acao?: ReactNode }) {
   return (
     <header className="flex flex-wrap items-start justify-between gap-3 border-b border-neutro-3 px-5 py-4">
