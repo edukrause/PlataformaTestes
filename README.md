@@ -14,6 +14,30 @@ que o sistema deve exibir. A plataforma obtém esse valor de forma **verificáve
 uma consulta de forma independente, as consultas são executadas em modo somente leitura e o valor só é adotado
 como referência quando ao menos dois resultados coincidem. A conferência do analista é sempre obrigatória.
 
+## Como vai funcionar
+
+1. O analista informa a chave da tarefa do Jira na interface (pelo assistente).
+2. A plataforma busca o requisito da tarefa e, se pedido, a documentação da rotina no Confluence.
+3. O **Módulo 1** gera os cenários de teste em Gherkin e valida a sintaxe.
+4. Para cada valor que o cenário precisa conferir, o **Módulo 2** pede a consulta SQL a três modelos
+   (Claude, Gemini e Llama), cada um de forma independente.
+5. As consultas passam por um verificador e são executadas no MySQL de homologação, só leitura, com limite
+   de tempo e de linhas.
+6. Se pelo menos dois dos três resultados coincidirem, o valor vira a referência do cenário; se não, o
+   cenário fica marcado como "valor a apurar".
+7. O analista confere os cenários, os valores e as consultas e registra a decisão. Tudo fica gravado para
+   auditoria e para as métricas do plano de validação.
+
+## Telas
+
+O protótipo da interface está em [`frontend`](frontend) e roda com dados simulados:
+
+- **Assistente**: conversa para pedir a geração dos cenários de uma tarefa;
+- **Execuções**: histórico com busca e filtros;
+- **Detalhe da execução**: requisito, andamento, cenários Gherkin com os valores apurados, consulta de cada
+  modelo e conferência do analista;
+- **Métricas**: indicadores do plano de validação e números por provedor.
+
 ## Arquitetura
 
 ![Arquitetura](docs/diagramas/arquitetura.png)
@@ -39,12 +63,22 @@ npx @mermaid-js/mermaid-cli -i docs/diagramas/arquitetura.mmd -o docs/diagramas/
 ## Planejamento
 
 - [Backlog priorizado](docs/backlog.md), com a fatia vertical marcada.
+- [Etapas do TCC](tcc) entregues ao orientador (E1 a E5).
 - Fora do escopo: execução automatizada dos testes, automação de interface, geração de massa sintética e
   **qualquer escrita no banco do ERP**.
 
 ## Como executar
 
-Ainda não há código. As instruções de execução entram aqui junto com o esqueleto (item B01 do backlog).
+Por enquanto só existe o protótipo da interface, que roda com dados simulados:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Detalhes em [`frontend/README.md`](frontend/README.md). As instruções completas entram aqui junto com o
+esqueleto (item B01 do backlog).
 
 ## Segurança
 
