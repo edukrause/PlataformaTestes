@@ -1,0 +1,55 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+@import "./estilos/filt-tokens.css";
+
+/* Nomes semânticos do Filt expostos como utilitários do Tailwind (bg-fundo, text-enfase, border-borda...). */
+@theme inline {
+  --font-sans: "Inter", -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+
+  --color-fundo: var(--bg-neutral-1);
+  --color-superficie: var(--bg-neutral-0);
+  --color-neutro-2: var(--bg-neutral-2);
+  --color-neutro-3: var(--bg-neutral-3);
+  --color-neutro-4: var(--bg-neutral-4);
+  --color-borda: var(--border-default);
+  --color-selecionado: var(--border-selected);
+
+  --color-enfase: var(--content-emphasis);
+  --color-texto: var(--content-primary);
+  --color-texto-sec: var(--content-secundary);
+
+  --color-marca: var(--btn-solid-bg-default);
+  --color-marca-hover: var(--btn-solid-bg-hover);
+  --color-marca-pressionado: var(--btn-solid-bg-pressed);
+  --color-sobre-marca: var(--btn-solid-text);
+  --color-link: var(--btn-ghost-text);
+
+  --color-info: var(--feedback-message-info-content);
+  --color-info-fundo: var(--feedback-message-info-bg);
+  --color-info-status: var(--feedback-status-info);
+  --color-sucesso: var(--feedback-message-success-content);
+  --color-sucesso-fundo: var(--feedback-message-success-bg);
+  --color-sucesso-status: var(--feedback-status-success);
+  --color-aviso: var(--feedback-message-warning-content);
+  --color-aviso-fundo: var(--feedback-message-warning-bg);
+  --color-aviso-status: var(--feedback-status-warning);
+  --color-erro: var(--feedback-message-error-content);
+  --color-erro-fundo: var(--feedback-message-error-bg);
+  --color-erro-status: var(--feedback-status-error);
+  --color-indigo-texto: var(--feedback-message-indigo-content);
+  --color-indigo-fundo: var(--feedback-message-indigo-bg);
+  --color-rosa: var(--feedback-message-pink-content);
+  --color-rosa-fundo: var(--feedback-message-pink-bg);
+  --color-rosa-status: var(--pink-500);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-neutral-1);
+  color: var(--content-primary);
+  font-family: var(--font-sans);
+}
