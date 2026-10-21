@@ -9,6 +9,20 @@ export type Desfecho = 'UNANIME' | 'MAIORIA' | 'DIVERGENTE' | 'FALHA'
 
 export type Decisao = 'ACEITO' | 'ACEITO_ALTERACAO' | 'REJEITADO'
 
+/** Situação da demanda no Jira. */
+export type StatusDemanda = 'A_FAZER' | 'EM_DESENVOLVIMENTO' | 'AGUARDANDO_TESTE' | 'EM_TESTE' | 'REPROVADA' | 'FINALIZADA'
+
+/** Dados da demanda que vêm do Jira e mudam independentemente das execuções. */
+export interface Demanda {
+  chaveJira: string
+  status: StatusDemanda
+  criadaEm: string
+  /** Data de entrega (yyyy-mm-dd); nula quando a demanda não tem prazo. */
+  prazo: string | null
+  /** Estimativa original, em horas. */
+  estimativaH: number | null
+}
+
 export type StatusExecucao = 'EM_ANDAMENTO' | 'CONCLUIDA' | 'ERRO'
 
 /** Etapas do fluxo principal (docs/diagramas/fluxo.mmd). */
@@ -37,12 +51,33 @@ export interface Tarefa {
   coletadaEm: string
 }
 
+export type ResultadoPasso = 'PASSOU' | 'FALHOU' | 'NAO_EXECUTADO'
+
+export type ResultadoTeste = 'PASSOU' | 'FALHOU' | 'BLOQUEADO'
+
+/** Execução do caso de teste pelo analista, no ambiente de homologação. */
+export interface ExecucaoTeste {
+  resultado: ResultadoTeste
+  /** Um resultado por linha de passo do Gherkin, na mesma ordem. */
+  passos: ResultadoPasso[]
+  observacao: string
+  executadoPor: string
+  executadoEm: string
+}
+
 export interface Cenario {
   id: number
   tipo: TipoCenario
   titulo: string
-  /** Texto Gherkin; marcadores «A<id>» indicam onde entra o valor de uma apuração. */
+  /**
+   * Passos em Gherkin (Dado que / E / Quando / Então), um por linha, no padrão dos casos de teste da NMTZ:
+   * sem "Funcionalidade:" nem "Cenário:", que viram o título. Marcadores «A<id>» indicam onde entra o valor de uma apuração.
+   */
   gherkin: string
+  /** Parágrafo "Resultado Esperado" que fecha o caso de teste; também aceita marcadores «A<id>». */
+  resultadoEsperado: string
+  /** Nula enquanto o caso não foi executado. */
+  execucaoTeste?: ExecucaoTeste | null
   sintaxeValida: boolean
 }
 
@@ -62,6 +97,18 @@ export interface CandidatoSql {
   latenciaMs: number
 }
 
+/**
+ * Mini relatório com os registros da base que formam o valor apurado, para o analista comparar
+ * linha a linha com o que a tela do ERP mostra.
+ */
+export interface RelatorioConferencia {
+  titulo: string
+  colunas: string[]
+  linhas: Celula[][]
+  /** Linha de totais, alinhada às colunas; nula quando não faz sentido somar. */
+  total: Celula[] | null
+}
+
 export interface Apuracao {
   id: number
   cenarioId: number | null
@@ -69,7 +116,17 @@ export interface Apuracao {
   subesquema: string[]
   desfecho: Desfecho
   resultadoReferencia: Tabela | null
+  conferencia?: RelatorioConferencia | null
   candidatos: CandidatoSql[]
+}
+
+/** Tipo de ponto de atenção levantado na análise da tarefa. */
+export type TipoAtencao = 'AMBIGUIDADE' | 'REGRESSAO' | 'MASSA' | 'DOCUMENTACAO'
+
+/** Algo que o analista deve olhar antes ou durante o teste, levantado junto com os casos. */
+export interface PontoAtencao {
+  tipo: TipoAtencao
+  texto: string
 }
 
 export interface Revisao {
@@ -95,6 +152,7 @@ export interface Execucao {
   iniciadaEm: string
   cenarios: Cenario[]
   apuracoes: Apuracao[]
+  pontosAtencao: PontoAtencao[]
   revisao: Revisao | null
 }
 
@@ -111,8 +169,12 @@ export interface ExecucaoResumo {
   qtdCenarios: number
   desfechos: Desfecho[]
   decisao: Decisao | null
-  /** Falso quando os cenários foram gerados sem a documentação da rotina. */
-  usouDocumentacao: boolean
+  /** Página da documentação usada na geração; nula quando foi gerada só com o requisito. */
+  documentacaoRef: string | null
+  qtdApuracoes: number
+  /** Apurações com valor de referência (unânime ou maioria). */
+  qtdComReferencia: number
+  demanda: Demanda
 }
 
 export interface NovaExecucaoRequest {

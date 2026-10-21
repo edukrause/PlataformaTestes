@@ -18,7 +18,12 @@ export const httpApi: PlataformaApi = {
   iniciarExecucao: (req) => chamar('/execucoes', { method: 'POST', body: JSON.stringify(req) }),
   registrarRevisao: (id, req) =>
     chamar(`/execucoes/${id}/revisao`, { method: 'POST', body: JSON.stringify(req) }),
+  registrarExecucaoTeste: (id, cenarioId, execucao) =>
+    chamar(`/execucoes/${id}/cenarios/${cenarioId}/execucao`, { method: 'PUT', body: JSON.stringify(execucao) }),
   obterMetricas: () => chamar('/metricas'),
+  obterDemanda: (chave) => chamar(`/demandas/${chave}`),
+  alterarStatusDemanda: (chave, status) =>
+    chamar(`/demandas/${chave}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
   listarConversas: () => chamar('/conversas'),
   obterConversa: (id) => chamar(`/conversas/${id}`),
   enviarMensagem: (req) => chamar('/conversas/mensagens', { method: 'POST', body: JSON.stringify(req) }),

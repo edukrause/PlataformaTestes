@@ -5,6 +5,7 @@ import type { PlataformaApi } from '../contrato'
 import type {
   Conversa,
   Decisao,
+  Demanda,
   Desfecho,
   Etapa,
   Execucao,
@@ -16,9 +17,10 @@ import type {
   Revisao,
 } from '../tipos'
 import * as ia from './assistente'
-import { EXECUCOES_EXEMPLO } from './dados'
+import { DEMANDAS_EXEMPLO, EXECUCOES_EXEMPLO } from './dados'
 
-const CHAVE = 'plataforma-testes:mock:v2'
+// v8: + relatório de conferência em cada apuração
+const CHAVE = 'plataforma-testes:mock:v8'
 
 /** Instante (ms desde o início) em que cada etapa termina. */
 const ROTEIRO: [Etapa, number][] = [
@@ -31,6 +33,7 @@ const ROTEIRO: [Etapa, number][] = [
 interface Estado {
   execucoes: Execucao[]
   conversas: Conversa[]
+  demandas: Demanda[]
 }
 
 function clonar<T>(v: T): T {
@@ -43,7 +46,12 @@ function carregar(): Estado {
     if (bruto) {
       const salvo = JSON.parse(bruto) as Estado
       // estado gravado antes de existir o assistente
-      return { ...salvo, conversas: salvo.conversas ?? conversasExemplo(salvo.execucoes) }
+      return {
+        ...salvo,
+        conversas: salvo.conversas ?? conversasExemplo(salvo.execucoes),
+        // estado gravado antes de existir a situação da demanda
+        demandas: salvo.demandas ?? clonar(DEMANDAS_EXEMPLO),
+      }
     }
   } catch {
     // sem localStorage (janela anônima, por exemplo): segue com os exemplos em memória
@@ -53,7 +61,7 @@ function carregar(): Estado {
 
 function exemplos(): Estado {
   const execucoes = clonar(EXECUCOES_EXEMPLO)
-  return { execucoes, conversas: conversasExemplo(execucoes) }
+  return { execucoes, conversas: conversasExemplo(execucoes), demandas: clonar(DEMANDAS_EXEMPLO) }
 }
 
 /** Uma conversa de exemplo sobre a DEMO-101, para o protótipo não abrir vazio. */
@@ -117,7 +125,10 @@ function visivel(e: Execucao): Execucao {
   const c = clonar(e)
   const ordem = ROTEIRO.map(([et]) => et)
   const pos = ordem.indexOf(c.etapa)
-  if (pos < ordem.indexOf('APURACAO')) c.cenarios = []
+  if (pos < ordem.indexOf('APURACAO')) {
+    c.cenarios = []
+    c.pontosAtencao = []
+  }
   if (pos < ordem.indexOf('COMPOSICAO')) c.apuracoes = []
   return c
 }
@@ -135,8 +146,30 @@ function resumo(e: Execucao): ExecucaoResumo {
     qtdCenarios: e.cenarios.length,
     desfechos: e.status === 'CONCLUIDA' ? e.apuracoes.map((a) => a.desfecho) : [],
     decisao: e.revisao?.decisao ?? null,
-    usouDocumentacao: e.tarefa.documentacaoRef != null,
+    documentacaoRef: e.tarefa.documentacaoRef,
+    qtdApuracoes: e.status === 'CONCLUIDA' ? e.apuracoes.length : 0,
+    qtdComReferencia: e.status === 'CONCLUIDA' ? e.apuracoes.filter((a) => a.resultadoReferencia).length : 0,
+    demanda: clonar(demanda(e.tarefa.chaveJira)),
   }
+}
+
+/** Demanda da tarefa; uma chave nova (execução simulada) entra como "Em teste", criada há dois dias. */
+function demanda(chaveJira: string): Demanda {
+  let d = estado.demandas.find((x) => x.chaveJira === chaveJira)
+  if (!d) {
+    const criada = new Date(Date.now() - 2 * 86400000)
+    const prazo = new Date(Date.now() + 5 * 86400000)
+    d = {
+      chaveJira,
+      status: 'EM_TESTE',
+      criadaEm: criada.toISOString().slice(0, 19),
+      prazo: prazo.toISOString().slice(0, 10),
+      estimativaH: 8,
+    }
+    estado.demandas.push(d)
+    salvar()
+  }
+  return d
 }
 
 function buscar(id: number): Execucao {
@@ -247,6 +280,19 @@ export const mockApi: PlataformaApi = {
     return { id: criarExecucao(chaveJira, usarDocumentacao) }
   },
 
+  async obterDemanda(chaveJira) {
+    await esperar(100)
+    return clonar(demanda(chaveJira))
+  },
+
+  async alterarStatusDemanda(chaveJira, status) {
+    await esperar(300)
+    const d = demanda(chaveJira)
+    d.status = status
+    salvar()
+    return clonar(d)
+  },
+
   async listarConversas() {
     await esperar(150)
     return estado.conversas
@@ -289,6 +335,14 @@ export const mockApi: PlataformaApi = {
     conversa.mensagens.push({ id: proximoId(), papel: 'ASSISTENTE', texto: resposta, enviadaEm: new Date().toISOString(), execucaoId })
     salvar()
     return clonar(conversa)
+  },
+
+  async registrarExecucaoTeste(execucaoId, cenarioId, execucao) {
+    await esperar(150)
+    const c = buscar(execucaoId).cenarios.find((x) => x.id === cenarioId)
+    if (!c) throw new Error(`Caso de teste ${cenarioId} não encontrado.`)
+    c.execucaoTeste = execucao
+    salvar()
   },
 
   async registrarRevisao(execucaoId, req) {

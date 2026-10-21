@@ -111,28 +111,32 @@ export function cenarioExtra(e: Execucao, id: number): Cenario {
   const titulo = estoque ? 'Depósito sem movimentação no período' : 'Cliente sem pedidos no período'
   const gherkin = estoque
     ? [
-        `Cenário: ${titulo}`,
-        '  Dado que estou na empresa 1, filial 1',
-        '  E acesso o relatório da rotina',
-        '  Quando informo um depósito que não teve movimentação no período',
-        '  Então o relatório deve exibir a mensagem "Nenhum registro encontrado"',
-        '  E nenhum saldo deve ser listado',
+        'Dado que o usuário acessa o relatório da rotina',
+        'E está logado na empresa 1, filial 1',
+        'Quando informa um depósito que não teve movimentação no período',
+        'E gera o relatório',
+        'Então o sistema exibe a mensagem "Nenhum registro encontrado"',
+        'E nenhum saldo é listado',
       ]
     : [
-        `Cenário: ${titulo}`,
-        '  Dado que estou na empresa 1, filial 1',
-        '  E existe um cliente ativo sem pedidos no período',
-        '  Quando consulto a rotina filtrando por esse cliente',
-        '  Então o sistema deve exibir a mensagem "Nenhum registro encontrado"',
-        '  E o total deve ser 0,00',
+        'Dado que existe um cliente ativo sem pedidos no período',
+        'E o usuário acessa a rotina',
+        'Quando filtra por esse cliente',
+        'Então o sistema exibe a mensagem "Nenhum registro encontrado"',
+        'E o total exibido é 0,00',
       ]
-  return { id, tipo: 'ALTERACAO', titulo, gherkin: gherkin.join('\n'), sintaxeValida: true }
+  const resultadoEsperado = estoque
+    ? 'Sem movimentação no período, o relatório informa que não há registros em vez de exibir saldos zerados.'
+    : 'Sem pedidos no período, a rotina informa que não há registros e o total fica zerado.'
+  return { id, tipo: 'ALTERACAO', titulo, gherkin: gherkin.join('\n'), resultadoEsperado, sintaxeValida: true }
 }
 
 export function textoCenarioExtra(c: Cenario): string {
   return [
     'Incluí um cenário negativo que não estava coberto:',
+    `**${c.titulo}**`,
     '```gherkin\n' + c.gherkin + '\n```',
+    `**Resultado esperado:** ${c.resultadoEsperado}`,
     'Ele já aparece na execução e passa pela sua conferência junto com os outros.',
   ].join('\n\n')
 }

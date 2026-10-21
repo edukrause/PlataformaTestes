@@ -53,6 +53,8 @@ Para ligar no Spring Boot, o back-end precisa expor os endpoints abaixo com os m
 | POST | `/api/execucoes` | `{ id }`, recebendo `NovaExecucaoRequest` |
 | POST | `/api/execucoes/{id}/revisao` | `Revisao`, recebendo `RevisaoRequest` |
 | GET | `/api/metricas` | `Metricas` |
+| GET | `/api/demandas/{chave}` | `Demanda` (situação, datas e estimativa vindas do Jira) |
+| PUT | `/api/demandas/{chave}/status` | `Demanda`, recebendo `{ status }`; faz a transição no Jira |
 
 Nos cenários, o marcador `«A<id>»` dentro do texto Gherkin indica onde entra o valor da apuração de mesmo id.
 A tela troca o marcador pelo valor de referência ou, quando não há consenso, por um aviso de "valor a apurar".
