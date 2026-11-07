@@ -14,6 +14,27 @@ permissions:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        postgres: ['16', '18']
+    services:
+      postgres:
+        image: postgres:${{ matrix.postgres }}
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: teste-local
+          POSTGRES_DB: plataforma_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PLATAFORMA_TEST_PG_URL: jdbc:postgresql://127.0.0.1:5432/plataforma_test
+      PLATAFORMA_TEST_PG_ADMIN: postgres
+      PLATAFORMA_TEST_PG_SENHA: teste-local
     defaults:
       run:
         working-directory: backend

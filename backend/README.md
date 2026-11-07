@@ -114,7 +114,10 @@ mantenha-a sob o controle de acesso da empresa. Nenhum resultado de banco é env
 
 ## Limites desta entrega
 
-Confluence, SQL/MySQL, múltiplos modelos, consenso e exportação de métricas ainda não foram implementados.
+PostgreSQL substitui o MySQL como fonte de homologação. O módulo de leitura já valida SELECT, verifica o plano
+e executa consultas com limites em transação somente leitura, independentemente da IA.
+Veja [configuração, endpoint e testes](docs/postgresql.md).
+Confluence, geração SQL pelos modelos, integração das consultas às apurações, consenso e exportação ainda estão pendentes.
 `usarDocumentacao` é recebido por compatibilidade com o frontend, mas esta versão sempre registra a ausência
 de documentação e gera apenas cenários de alteração. Alterar situação ou publicar cenários no Jira não está
 habilitado; a tentativa de alteração de situação retorna 501.

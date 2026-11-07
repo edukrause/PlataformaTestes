@@ -17,6 +17,14 @@ spring:
     deserialization:
       fail-on-unknown-properties: true
 plataforma:
+  postgres:
+    habilitado: ${ERP_POSTGRES_HABILITADO:false}
+    url: ${ERP_POSTGRES_URL:}
+    usuario: ${ERP_POSTGRES_USUARIO:}
+    senha: ${ERP_POSTGRES_SENHA:}
+    timeout-segundos: ${ERP_POSTGRES_TIMEOUT_SEGUNDOS:10}
+    max-linhas: ${ERP_POSTGRES_MAX_LINHAS:1000}
+    max-caracteres: ${ERP_POSTGRES_MAX_CARACTERES:1000000}
   ia:
     # Integração com o provedor adiada. api mantém o adaptador existente como opção explícita.
     modo: ${PLATAFORMA_IA_MODO:desativada}
