@@ -73,7 +73,8 @@ public class PostgresLeituraGateway implements ConsultaBancoGateway {
         var metadata = rs.getMetaData();
         var colunas = new ArrayList<Coluna>();
         for (int c = 1; c <= metadata.getColumnCount(); c++)
-            colunas.add(new Coluna(metadata.getColumnLabel(c), metadata.getColumnTypeName(c), metadata.getScale(c)));
+            colunas.add(new Coluna(metadata.getColumnLabel(c), metadata.getColumnTypeName(c),
+                    metadata.getPrecision(c) == 0 ? -1 : metadata.getScale(c)));
         var linhas = new ArrayList<List<Object>>();
         long caracteres = 0;
         while (rs.next()) {

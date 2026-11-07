@@ -62,3 +62,24 @@ Os testes reais verificam tipos e nulos, limites, falhas de EXPLAIN, cancelament
 
 Referências: [transações somente leitura](https://www.postgresql.org/docs/18/sql-set-transaction.html),
 [JSQLParser](https://github.com/JSQLParser/JSqlParser/releases/tag/jsqlparser-5.3).
+
+## Comparação de resultados e consenso
+
+`NormalizadorResultados` e `MotorConsenso` são componentes internos, testáveis sem IA.
+A execução manual de `/api/banco/consultas` ainda não dispara nem persiste uma apuração por consenso.
+
+A normalização ignora aliases e ordem de colunas; ignora ordem de linhas somente quando a apuração não exige
+ordenamento. Nulos, textos, números, booleanos e datas recebem marcadores distintos. Linhas repetidas são
+preservadas. Números usam a escala informada pelo PostgreSQL; se a expressão não fornecer precisão,
+usa-se escala de duas casas e arredondamento HALF_UP. Instantes com fuso são comparados em UTC.
+
+A relação entre os valores das colunas é preservada: as células de uma linha não são ordenadas isoladamente.
+Colunas com a mesma distribuição de valores exigem permutações globais para produzir uma forma canônica.
+O cálculo admite até 120 alternativas e, se houver ambiguidade maior, descarta o candidato para conferência
+manual, em vez de emitir um hash aproximado. A tabela admite até 64 colunas e 100000 células nesta etapa.
+
+Cada família de modelo tem um único voto final. Retentativas do mesmo provedor não são votos adicionais.
+Três resultados iguais produzem UNANIME; dois produzem MAIORIA; dois ou mais válidos sem acordo produzem
+DIVERGENTE; menos de dois válidos produzem FALHA. Erros, vazios, truncamentos e resultados não normalizáveis
+não votam. A forma canônica completa fundamenta o acordo e o SHA-256 permite rastreá-la.
+Consenso fornece uma referência apurada; a validação da regra de negócio permanece com o analista.
