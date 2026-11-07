@@ -6,6 +6,8 @@ import java.text.Normalizer;
 import java.util.*;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 
 @Service
 @EnableConfigurationProperties(CatalogoProperties.class)
@@ -19,12 +21,29 @@ public class CatalogoService {
     public record Catalogo(List<Tabela> tabelas, List<Relacao> relacionamentos) {}
     private final ConsultaBancoGateway banco;
     private final CatalogoProperties config;
+    private final long ttlMs;
+    private record CacheCatalogo(Catalogo valor,long expira) {}
+    private record CacheAmostra(Resultado valor,long expira) {}
+    private CacheCatalogo cache;
+    private final Map<String,CacheAmostra> amostras=new HashMap<>();
 
     public CatalogoService(ConsultaBancoGateway banco, CatalogoProperties config) {
-        this.banco = banco; this.config = config;
+        this(banco,config,0);
+    }
+    @Autowired
+    public CatalogoService(ConsultaBancoGateway banco,CatalogoProperties config,@Value("${plataforma.catalogo.cache-segundos:60}") int ttl) {
+        if(ttl<0||ttl>3600)throw new IllegalArgumentException("Cache do catálogo deve estar entre 0 e 3600 segundos.");
+        this.banco=banco;this.config=config;this.ttlMs=ttl*1000L;
     }
 
-    public Catalogo obter() {
+    public synchronized void invalidar() { cache=null;amostras.clear(); }
+    public synchronized Catalogo obter() {
+        if(cache!=null&&cache.expira()>System.currentTimeMillis())return cache.valor();
+        var valor=coletar();
+        cache=new CacheCatalogo(valor,System.currentTimeMillis()+ttlMs);
+        return valor;
+    }
+    private Catalogo coletar() {
         String schemas = config.schemas().stream().map(CatalogoService::literal).reduce((a,b) -> a + "," + b).orElseThrow();
         var linhas = ler("""
                 SELECT table_schema, table_name, column_name, data_type, is_nullable
@@ -90,14 +109,31 @@ public class CatalogoService {
                 catalogo.relacionamentos().stream().filter(r -> selecionadas.contains(r.origem()) && selecionadas.contains(r.destino())).toList());
     }
 
-    public Resultado amostrar(String schema, String tabela, String coluna) {
+    public synchronized Resultado amostrar(String schema, String tabela, String coluna) {
         // O nome só chega ao SQL depois de conferido na configuração e no catálogo visível.
         if (!config.colunasPermitidas().contains(schema + "." + tabela + "." + coluna))
             throw ErroApi.entrada("A coluna não está autorizada para amostragem.");
         var t = obter().tabelas().stream().filter(x -> x.schema().equals(schema) && x.nome().equals(tabela)).findFirst();
         if (t.isEmpty() || !temColuna(t.get(), coluna)) throw ErroApi.entrada("Coluna indisponível no catálogo permitido.");
-        return banco.consultar("SELECT DISTINCT " + identificador(coluna) + " FROM " + identificador(schema) + "." + identificador(tabela)
+        String chave=schema+"."+tabela+"."+coluna;
+        var anterior=amostras.get(chave);
+        if(anterior!=null&&anterior.expira()>System.currentTimeMillis())return anterior.valor();
+        var resultado=banco.consultar("SELECT DISTINCT " + identificador(coluna) + " FROM " + identificador(schema) + "." + identificador(tabela)
                 + " WHERE " + identificador(coluna) + " IS NOT NULL LIMIT " + config.maxAmostras());
+        amostras.entrySet().removeIf(e->e.getValue().expira()<=System.currentTimeMillis());
+        if(amostras.size()<128&&(resultado.verificacao()==Verificacao.VALIDO||resultado.verificacao()==Verificacao.VAZIO))
+            amostras.put(chave,new CacheAmostra(resultado,System.currentTimeMillis()+ttlMs));
+        return resultado;
+    }
+    public Map<String,List<Object>> amostrasPermitidas(Catalogo selecionado) {
+        var resultado=new LinkedHashMap<String,List<Object>>();
+        for(var tabela:selecionado.tabelas())for(var coluna:tabela.colunas()) {
+            String chave=tabela.chave()+"."+coluna.nome();
+            if(!config.colunasPermitidas().contains(chave))continue;
+            var amostra=amostrar(tabela.schema(),tabela.nome(),coluna.nome());
+            if(amostra.verificacao()==Verificacao.VALIDO)resultado.put(chave,amostra.linhas().stream().map(l->l.getFirst()).toList());
+        }
+        return Map.copyOf(resultado);
     }
 
     private List<List<Object>> ler(String sql) {

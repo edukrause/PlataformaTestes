@@ -15,7 +15,13 @@ public class ApuracaoService {
             @NotBlank @Size(max = 20000) String consulta) {}
     public record Pedido(@Positive Long cenarioId, @NotBlank @Size(max = 10000) String pergunta,
             boolean preservarOrdem, @NotNull @Size(min = 1, max = 3) List<@NotNull @Valid Consulta> candidatos) {}
-    public record Avaliado(MotorConsenso.Provedor provedor, String consulta, Resultado resultado) {}
+    public record Avaliado(MotorConsenso.Provedor provedor, String consulta, Resultado resultado,
+            String modelo, int tentativa, int tokensEntrada, int tokensSaida, java.math.BigDecimal custoUsd,
+            long latenciaTotalMs, boolean manual) {
+        public Avaliado(MotorConsenso.Provedor provedor, String consulta, Resultado resultado) {
+            this(provedor, consulta, resultado, "INFORMADO_MANUALMENTE", 1, 0, 0, java.math.BigDecimal.ZERO, resultado.latenciaMs(), true);
+        }
+    }
     private final ConsultaBancoService consultas;
     private final CatalogoService catalogo;
     private final MotorConsenso consenso;
@@ -34,6 +40,8 @@ public class ApuracaoService {
         if (pedido.candidatos().stream().map(Consulta::provedor).distinct().count() != pedido.candidatos().size())
             throw ErroApi.entrada("Informe apenas uma consulta final por provedor.");
         long inicio = System.nanoTime();
+        registro.iniciarApuracao(execucaoId,false);
+        try {
         var esquema = catalogo.selecionar(pedido.pergunta());
         var avaliados = new ArrayList<Avaliado>();
         for (var candidato : pedido.candidatos()) {
@@ -48,5 +56,6 @@ public class ApuracaoService {
         }
         var decisao = consenso.decidir(avaliados.stream().map(a -> new MotorConsenso.Candidato(a.provedor(), a.resultado())).toList(), pedido.preservarOrdem());
         return registro.salvarApuracao(execucaoId, pedido, esquema, avaliados, decisao, (System.nanoTime() - inicio) / 1_000_000);
+        } finally { registro.finalizarApuracao(execucaoId,(System.nanoTime()-inicio)/1_000_000); }
     }
 }

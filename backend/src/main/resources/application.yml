@@ -5,6 +5,8 @@ server:
     include-message: never
     include-stacktrace: never
 spring:
+  config:
+    import: optional:file:.env[.properties]
   application:
     name: plataforma-testes
   datasource:
@@ -17,7 +19,18 @@ spring:
     deserialization:
       fail-on-unknown-properties: true
 plataforma:
+  confluence:
+    base-url: ${CONFLUENCE_BASE_URL:}
+    email: ${CONFLUENCE_EMAIL:}
+    token: ${CONFLUENCE_API_TOKEN:}
+    paginas: ${CONFLUENCE_PAGINAS:}
+    api-version: ${CONFLUENCE_API_VERSION:2}
+    auth-mode: ${CONFLUENCE_AUTH_MODE:basic}
+  dominio:
+    regras: ${DOMINIO_REGRAS:}
   catalogo:
+    enviar-amostras: ${ERP_AMOSTRA_ENVIAR_MODELOS:false}
+    cache-segundos: ${ERP_CATALOGO_CACHE_SEGUNDOS:60}
     schemas: ${ERP_CATALOGO_SCHEMAS:public}
     colunas-permitidas: ${ERP_AMOSTRA_COLUNAS:}
     max-amostras: ${ERP_AMOSTRA_MAX_VALORES:5}
@@ -32,9 +45,28 @@ plataforma:
     max-linhas: ${ERP_POSTGRES_MAX_LINHAS:1000}
     max-caracteres: ${ERP_POSTGRES_MAX_CARACTERES:1000000}
   ia:
+    provedor: ${PLATAFORMA_IA_PROVEDOR:GEMINI}
     # Integração com o provedor adiada. api mantém o adaptador existente como opção explícita.
     modo: ${PLATAFORMA_IA_MODO:desativada}
+  modelos:
+    max-tokens: ${MODELOS_MAX_TOKENS:4096}
+    provedores:
+      GEMINI:
+        habilitado: ${GEMINI_HABILITADO:false}
+        chave: ${GEMINI_API_KEY:}
+        modelo: ${GEMINI_MODEL:}
+        preco-entrada: ${GEMINI_INPUT_PRICE:}
+        preco-saida: ${GEMINI_OUTPUT_PRICE:}
+      LLAMA:
+        habilitado: ${GROQ_HABILITADO:false}
+        chave: ${GROQ_API_KEY:}
+        modelo: ${GROQ_MODEL:}
+        preco-entrada: ${GROQ_INPUT_PRICE:}
+        preco-saida: ${GROQ_OUTPUT_PRICE:}
   jira:
+    status-mapa: ${JIRA_STATUS_MAPA:}
+    escrita-habilitada: ${JIRA_ESCRITA_HABILITADA:false}
+    transicoes: ${JIRA_TRANSICOES:}
     base-url: ${JIRA_BASE_URL:}
     email: ${JIRA_EMAIL:}
     token: ${JIRA_API_TOKEN:}

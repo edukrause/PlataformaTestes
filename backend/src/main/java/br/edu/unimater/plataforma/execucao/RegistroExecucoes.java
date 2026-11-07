@@ -37,18 +37,25 @@ public class RegistroExecucoes {
 
     @Transactional
     public void auditar(long id, ModeloGateway.Resposta r) {
+        auditarChamada(id, r, "CENARIOS");
+    }
+    @Transactional
+    public void auditarSql(long id, ModeloGateway.Resposta r) { auditarChamada(id, r, "SQL"); }
+    private void auditarChamada(long id, ModeloGateway.Resposta r, String finalidade) {
         inserir("""
                 INSERT INTO chamada_modelo(execucao_id,provedor,modelo,prompt_enviado,resposta,correspondencias_json,
-                tokens_entrada,tokens_saida,latencia_ms,custo_usd) VALUES(?,'CLAUDE',?,?,?,?,?,?,?,?)
-                """, id, r.modelo(), r.promptEnviado(), r.texto(), json(r.correspondencias()),
-                r.tokensEntrada(), r.tokensSaida(), r.latenciaMs(), r.custoUsd());
+                tokens_entrada,tokens_saida,latencia_ms,custo_usd,finalidade) VALUES(?,?,?,?,?,?,?,?,?,?,?)
+                """, id, r.provedor(), r.modelo(), r.promptEnviado(), r.texto(), json(r.correspondencias()),
+                r.tokensEntrada(), r.tokensSaida(), r.latenciaMs(), r.custoUsd(), finalidade);
         db.update("UPDATE execucao SET custo_total_usd=custo_total_usd+? WHERE id=?", r.custoUsd(), id);
     }
 
     @Transactional
-    public void concluir(long id, GeradorCenarios.Geracao g, long duracao) {
+    public void concluir(long id, GeradorCenarios.Geracao g, long duracao, br.edu.unimater.plataforma.contexto.DocumentacaoGateway.Documento doc) {
         List<PontoAtencao> pontos = new ArrayList<>(g.pontosAtencao().stream().map(a -> new PontoAtencao(a.tipo(), a.texto())).toList());
-        pontos.add(new PontoAtencao("DOCUMENTACAO", "Geração baseada apenas no requisito. Confluence ainda não está integrado."));
+        if (doc == null) pontos.add(new PontoAtencao("DOCUMENTACAO", "Geração baseada apenas no requisito. Documentação funcional não solicitada."));
+        else db.update("UPDATE tarefa SET documentacao_ref=?,hash_documentacao=?,documentacao_texto=?,documentacao_versao=? WHERE id=(SELECT tarefa_id FROM execucao WHERE id=?)",
+                doc.referencia(), doc.hash(), doc.texto(), doc.versao(), id);
         if (g.exigeApuracao()) pontos.add(new PontoAtencao("MASSA",
                 "Apuração SQL pendente: nenhum valor foi consultado ou verificado no banco. Confirme os valores manualmente."));
         for (var c : g.cenarios()) inserir("""
@@ -57,19 +64,39 @@ public class RegistroExecucoes {
                 """, id, c.tipo(), c.titulo(), c.gherkin(), c.resultadoEsperado());
         db.update("UPDATE tarefa SET area=? WHERE id=(SELECT tarefa_id FROM execucao WHERE id=?)", g.area(), id);
         db.update("""
-                UPDATE execucao SET status='CONCLUIDA',etapa='COMPOSICAO',exige_apuracao=?,tempo_total_ms=?,pontos_atencao_json=?
+                UPDATE execucao SET status='CONCLUIDA',etapa='APURACAO',exige_apuracao=?,tempo_total_ms=?,pontos_atencao_json=?
                 WHERE id=?
                 """, g.exigeApuracao(), duracao, json(pontos), id);
     }
     public void falhar(long id, String mensagem, long duracao) {
         db.update("UPDATE execucao SET status='ERRO',mensagem_erro=?,tempo_total_ms=? WHERE id=?", mensagem, duracao, id);
     }
+    public void etapa(long id, String etapa) { db.update("UPDATE execucao SET etapa=? WHERE id=?", etapa, id); }
+    public void finalizarTempo(long id, long tempo) { db.update("UPDATE execucao SET tempo_total_ms=?,etapa='COMPOSICAO' WHERE id=?", tempo, id); }
+    @Transactional
+    public void iniciarApuracao(long id, boolean interna) {
+        bloquear(id);
+        var e=obter(id);
+        if(!e.status().equals("CONCLUIDA")||e.revisao()!=null||(!interna&&!e.etapa().equals("COMPOSICAO")))
+            throw ErroApi.entrada("Aguarde a execução atual terminar. Execuções revisadas não recebem novas apurações.");
+        db.update("UPDATE execucao SET etapa='APURACAO' WHERE id=?",id);
+    }
+    public void finalizarApuracao(long id,long tempo) {
+        db.update("UPDATE execucao SET etapa='COMPOSICAO',tempo_total_ms=tempo_total_ms+? WHERE id=?",tempo,id);
+    }
+    @Transactional
+    public void avisar(long id, String mensagem) {
+        bloquear(id);
+        var pontos = new ArrayList<>(obter(id).pontosAtencao());
+        pontos.add(new PontoAtencao("MASSA", mensagem));
+        db.update("UPDATE execucao SET pontos_atencao_json=? WHERE id=?", json(pontos), id);
+    }
 
     public Execucao obter(long id) {
-        var execucoes = db.query("SELECT e.*,t.id AS tid,t.chave_jira,t.titulo,t.area,t.requisito,t.documentacao_ref,t.coletada_em FROM execucao e JOIN tarefa t ON t.id=e.tarefa_id WHERE e.id=?",
+        var execucoes = db.query("SELECT e.*,t.id AS tid,t.chave_jira,t.titulo,t.area,t.requisito,t.documentacao_ref,t.coletada_em,t.origem FROM execucao e JOIN tarefa t ON t.id=e.tarefa_id WHERE e.id=?",
                 (rs, n) -> new Execucao(rs.getLong("id"),
                         new Tarefa(rs.getLong("tid"), rs.getString("chave_jira"), rs.getString("titulo"), rs.getString("area"),
-                                rs.getString("requisito"), rs.getString("documentacao_ref"), Instant.parse(rs.getString("coletada_em"))),
+                                rs.getString("requisito"), rs.getString("documentacao_ref"), Instant.parse(rs.getString("coletada_em")), rs.getString("origem")),
                         rs.getString("versao_prompt"), rs.getString("status"), rs.getString("etapa"), rs.getBoolean("exige_apuracao"),
                         rs.getLong("tempo_total_ms"), rs.getBigDecimal("custo_total_usd"), Instant.parse(rs.getString("iniciada_em")),
                         cenarios(id), apuracoes(id), pontos(rs.getString("pontos_atencao_json")), revisao(id), rs.getString("mensagem_erro"), !apuracoes(id).isEmpty()), id);
@@ -94,27 +121,35 @@ public class RegistroExecucoes {
             throw ErroApi.entrada("O cenário não pertence à execução.");
         long id = inserir("""
                 INSERT INTO apuracao(execucao_id,cenario_id,pergunta,subesquema,desfecho,resultado_referencia,preservar_ordem,tempo_total_ms,origem)
-                VALUES(?,?,?,?,?,?,?,?,'MANUAL')
+                VALUES(?,?,?,?,?,?,?,?,?)
                 """, execucaoId, pedido.cenarioId(), pedido.pergunta(), json(esquema), decisao.desfecho().name(),
-                decisao.resultadoReferencia() == null ? null : json(decisao.resultadoReferencia()), pedido.preservarOrdem(), tempoMs);
+                decisao.resultadoReferencia() == null ? null : json(decisao.resultadoReferencia()), pedido.preservarOrdem(), tempoMs,
+                candidatos.stream().allMatch(ApuracaoService.Avaliado::manual) ? "MANUAL" : "MODELOS");
         for (var c : candidatos) inserir("""
                 INSERT INTO candidato_sql(apuracao_id,provedor,modelo,tentativa,consulta,verificacao,hash_resultado,
                 tokens_entrada,tokens_saida,custo_usd,latencia_ms,resultado_json,mensagem_erro)
-                VALUES(?,?,'INFORMADO_MANUALMENTE',1,?,?,?,0,0,0,?,?,?)
-                """, id, c.provedor().name(), c.consulta(), c.resultado().verificacao().name(), decisao.hashes().get(c.provedor()),
-                c.resultado().latenciaMs(), json(c.resultado()), decisao.descartes().get(c.provedor()));
+                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)
+                """, id, c.provedor().name(), c.modelo(), c.tentativa(), c.consulta(), c.resultado().verificacao().name(), decisao.hashes().get(c.provedor()),
+                c.tokensEntrada(), c.tokensSaida(), c.custoUsd(), c.latenciaTotalMs(), json(c.resultado()), decisao.descartes().get(c.provedor()));
         // Marcadores explícitos associam o valor ao passo correto, sem inventar substituições de texto.
         // A interface já resolve «A<id>» usando a tabela de referência.
         if (pedido.cenarioId() != null) {
             String resultado = decisao.resultadoReferencia() == null
                     ? "\nApuração A" + id + ": " + decisao.desfecho() + "; conferir manualmente."
                     : "\nValor de referência apurado: «A" + id + "».";
-            db.update("UPDATE cenario SET resultado_esperado=resultado_esperado || ? WHERE id=? AND execucao_id=?", resultado, pedido.cenarioId(), execucaoId);
+            if (decisao.resultadoReferencia() != null) {
+                var cenario = execucao.cenarios().stream().filter(c -> c.id() == pedido.cenarioId()).findFirst().orElseThrow();
+                String marcador = "«A" + id + "»";
+                db.update("UPDATE cenario SET gherkin=?,resultado_esperado=? WHERE id=? AND execucao_id=?",
+                        cenario.gherkin().replace("«VALOR_APURADO»", marcador),
+                        cenario.resultadoEsperado().contains("«VALOR_APURADO»") ? cenario.resultadoEsperado().replace("«VALOR_APURADO»", marcador)
+                                : cenario.resultadoEsperado() + resultado, pedido.cenarioId(), execucaoId);
+            } else db.update("UPDATE cenario SET resultado_esperado=resultado_esperado || ? WHERE id=? AND execucao_id=?", resultado, pedido.cenarioId(), execucaoId);
         }
         db.update("UPDATE execucao SET exige_apuracao=TRUE WHERE id=?", execucaoId);
         var avisos = new ArrayList<>(execucao.pontosAtencao());
         avisos.removeIf(p -> p.tipo().equals("MASSA") && p.texto().startsWith("Apuração SQL pendente:"));
-        if (avisos.stream().noneMatch(p -> p.tipo().equals("MASSA") && p.texto().startsWith("Consultas informadas manualmente")))
+        if (candidatos.stream().allMatch(ApuracaoService.Avaliado::manual) && avisos.stream().noneMatch(p -> p.tipo().equals("MASSA") && p.texto().startsWith("Consultas informadas manualmente")))
             avisos.add(new PontoAtencao("MASSA", "Consultas informadas manualmente; a origem nos provedores não foi autenticada. Consenso exige conferência da regra de negócio e não garante cobertura de todos os valores do cenário."));
         db.update("UPDATE execucao SET pontos_atencao_json=? WHERE id=?", json(avisos), execucaoId);
         return id;
@@ -128,6 +163,8 @@ public class RegistroExecucoes {
             if (r.getObject("cenario_id") == null) node.putNull("cenarioId"); else node.put("cenarioId", r.getLong("cenario_id"));
             node.put("pergunta", r.getString("pergunta")); node.put("desfecho", r.getString("desfecho"));
             node.put("origem", r.getString("origem")); node.put("tempoTotalMs", r.getLong("tempo_total_ms"));
+            var revisaoAtual = revisao(execucaoId);
+            node.put("valorCorrigido", revisaoAtual == null ? null : revisaoAtual.valoresCorrigidos().get(id));
             node.put("preservarOrdem", r.getBoolean("preservar_ordem"));
             var esquema = ler(r.getString("subesquema"), CatalogoService.Catalogo.class);
             node.set("subesquema", mapper.valueToTree(esquema.tabelas().stream().map(CatalogoService.Tabela::chave).toList()));
@@ -163,21 +200,28 @@ public class RegistroExecucoes {
     private Revisao revisao(long id) {
         var revisoes = db.query("SELECT * FROM revisao WHERE execucao_id=?", (r, n) -> new Revisao(r.getLong("id"),
                 r.getString("analista"), r.getString("decisao"), r.getInt("valores_alterados"), r.getLong("tempo_revisao_s"),
-                r.getString("comentario"), Instant.parse(r.getString("registrada_em"))), id);
+                r.getString("comentario"), Instant.parse(r.getString("registrada_em")), correcoes(r.getString("valores_corrigidos_json"))), id);
         return revisoes.isEmpty() ? null : revisoes.getFirst();
     }
     @Transactional
     public Revisao revisar(long id, RevisaoRequest req) {
         bloquear(id);
-        if (!obter(id).status().equals("CONCLUIDA")) throw ErroApi.entrada("A geração ainda não foi concluída.");
-        if (!req.valoresCorrigidos().isEmpty()) throw ErroApi.entrada("Ainda não há apurações para registrar correções de valores.");
+        if (db.queryForObject("SELECT COUNT(*) FROM publicacao_jira WHERE execucao_id=? AND status='PENDENTE'", Long.class, id) > 0)
+            throw new ErroApi(org.springframework.http.HttpStatus.CONFLICT, "Aguarde a publicação no Jira terminar antes de alterar a revisão.");
+        if (!obter(id).status().equals("CONCLUIDA") || !obter(id).etapa().equals("COMPOSICAO")) throw ErroApi.entrada("A geração ainda não foi concluída.");
+        if (!req.valoresCorrigidos().isEmpty() && !req.decisao().equals("ACEITO_ALTERACAO"))
+            throw ErroApi.entrada("Para corrigir valores, selecione Aceito com alteração.");
+        var referencias = obter(id).apuracoes().stream().filter(a -> !a.path("resultadoReferencia").isNull())
+                .map(a -> a.path("id").asLong()).collect(java.util.stream.Collectors.toSet());
+        if (!referencias.containsAll(req.valoresCorrigidos().keySet()))
+            throw ErroApi.entrada("Corrija somente apurações desta execução que possuem referência.");
         // Uma revisão corrente por execução, substituída atomicamente quando o analista a atualiza.
         db.update("DELETE FROM revisao WHERE execucao_id=?", id);
-        inserir("INSERT INTO revisao(execucao_id,analista,decisao,valores_alterados,tempo_revisao_s,comentario,registrada_em) VALUES(?,?,?,0,?,?,?)",
-                id, req.analista(), req.decisao(), req.tempoRevisaoS(), req.comentario(), Instant.now().toString());
+        inserir("INSERT INTO revisao(execucao_id,analista,decisao,valores_alterados,tempo_revisao_s,comentario,registrada_em,valores_corrigidos_json) VALUES(?,?,?,?,?,?,?,?)",
+                id, req.analista(), req.decisao(), req.valoresCorrigidos().size(), req.tempoRevisaoS(), req.comentario(), Instant.now().toString(), json(req.valoresCorrigidos()));
         db.update("""
-                INSERT INTO historico_revisao(execucao_id,analista,decisao,valores_alterados,tempo_revisao_s,comentario,registrada_em)
-                SELECT execucao_id,analista,decisao,valores_alterados,tempo_revisao_s,comentario,registrada_em
+                INSERT INTO historico_revisao(execucao_id,analista,decisao,valores_alterados,tempo_revisao_s,comentario,registrada_em,valores_corrigidos_json)
+                SELECT execucao_id,analista,decisao,valores_alterados,tempo_revisao_s,comentario,registrada_em,valores_corrigidos_json
                 FROM revisao WHERE execucao_id=?
                 """, id);
         return revisao(id);
@@ -187,13 +231,13 @@ public class RegistroExecucoes {
         return db.query("SELECT * FROM historico_revisao WHERE execucao_id=? ORDER BY id", (r, n) ->
                 new Revisao(r.getLong("id"), r.getString("analista"), r.getString("decisao"),
                         r.getInt("valores_alterados"), r.getLong("tempo_revisao_s"), r.getString("comentario"),
-                        Instant.parse(r.getString("registrada_em"))), id);
+                        Instant.parse(r.getString("registrada_em")), correcoes(r.getString("valores_corrigidos_json"))), id);
     }
     @Transactional
     public void registrarTeste(long id, long cenarioId, ExecucaoTeste teste) {
         bloquear(id);
         var e = obter(id);
-        if (!e.status().equals("CONCLUIDA")) throw ErroApi.entrada("A geração ainda não foi concluída.");
+        if (!e.status().equals("CONCLUIDA") || !e.etapa().equals("COMPOSICAO")) throw ErroApi.entrada("A geração ainda não foi concluída.");
         var c = e.cenarios().stream().filter(x -> x.id() == cenarioId).findFirst().orElseThrow(ErroApi::naoEncontrado);
         if (teste != null && teste.passos().size() != c.gherkin().lines().filter(l -> !l.isBlank()).count())
             throw ErroApi.entrada("Informe um resultado para cada passo do cenário.");
@@ -242,5 +286,9 @@ public class RegistroExecucoes {
     private List<PontoAtencao> pontos(String json) {
         try { return mapper.readValue(json, new TypeReference<>() {}); }
         catch (JsonProcessingException e) { throw new IllegalStateException("Não foi possível ler os pontos de atenção."); }
+    }
+    private Map<Long, String> correcoes(String json) {
+        try { return mapper.readValue(json, new TypeReference<>() {}); }
+        catch (JsonProcessingException e) { throw new IllegalStateException("Não foi possível ler as correções."); }
     }
 }

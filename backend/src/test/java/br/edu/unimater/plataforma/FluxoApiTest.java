@@ -72,9 +72,9 @@ class FluxoApiTest {
         long id = gerar();
         mvc.perform(get("/api/execucoes/{id}", id)).andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("ERRO"))
-                .andExpect(jsonPath("$.custoTotalUsd").value(0.0012))
+                .andExpect(jsonPath("$.custoTotalUsd").value(0.0024))
                 .andExpect(jsonPath("$.cenarios").isEmpty());
-        assertThat(db.queryForObject("SELECT COUNT(*) FROM chamada_modelo WHERE execucao_id=?", Integer.class, id)).isEqualTo(1);
+        assertThat(db.queryForObject("SELECT COUNT(*) FROM chamada_modelo WHERE execucao_id=?", Integer.class, id)).isEqualTo(2);
     }
     @Test void erroDeConfiguracaoFicaNaExecucao() throws Exception {
         preparar(GERACAO);

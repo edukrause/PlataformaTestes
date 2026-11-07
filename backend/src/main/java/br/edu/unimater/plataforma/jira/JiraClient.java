@@ -20,6 +20,7 @@ import org.springframework.web.client.*;
 public class JiraClient implements RequisitoGateway {
     private final RestClient http;
     private final String baseUrl, email, token, version, authMode, areaField;
+    @Value("${plataforma.jira.status-mapa:}") private String statusMapa = "";
     public JiraClient(@Value("${plataforma.jira.base-url}") String baseUrl,
             @Value("${plataforma.jira.email}") String email, @Value("${plataforma.jira.token}") String token,
             @Value("${plataforma.jira.api-version}") String version,
@@ -92,7 +93,14 @@ public class JiraClient implements RequisitoGateway {
         if (type.equals("tableCell")) b.append('\t');
         return b.toString();
     }
-    private static String status(JsonNode node) {
+    private String status(JsonNode node) {
+        for(String par:statusMapa.split(",")) {
+            if(par.isBlank())continue;
+            var partes=par.strip().split(":",2);
+            if(partes.length!=2||!partes[0].matches("[0-9]+")||!partes[1].matches("A_FAZER|EM_DESENVOLVIMENTO|AGUARDANDO_TESTE|EM_TESTE|REPROVADA|FINALIZADA"))
+                throw ErroApi.configuracao("JIRA_STATUS_MAPA deve conter ID:STATUS separados por vírgula.");
+            if(partes[0].equals(node.path("id").asText()))return partes[1];
+        }
         String name = Normalizer.normalize(node.path("name").asText(), Normalizer.Form.NFD)
                 .replaceAll("\\p{M}", "").toLowerCase(Locale.ROOT);
         if (name.contains("reprov")) return "REPROVADA";

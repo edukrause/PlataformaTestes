@@ -31,15 +31,15 @@ public class ConversaService {
                 var exec = registro.obter(id);
                 resposta = exec.status().equals("CONCLUIDA")
                         ? "Gerei " + exec.cenarios().size() + " cenários para **" + chave
-                            + "** a partir do requisito. Abra a execução para conferir. A documentação e a apuração SQL ainda estão pendentes."
+                            + "**. Abra a execução para conferir os cenários, as apurações e as pendências."
                         : "Não consegui gerar os cenários de **" + chave + "**. " + exec.mensagemErro();
             } catch (ErroApi erro) {
                 resposta = "Não consegui processar **" + chave + "**. " + erro.getMessage();
             }
         } else {
             resposta = "Informe a chave de uma tarefa, como **PROJ-123**, para gerar cenários Gherkin quando a integração de IA estiver disponível. "
-                    + "Esta primeira versão usa o requisito do Jira, salva o histórico e recebe a conferência do analista. "
-                    + "Confluence, apuração SQL e perguntas livres sobre os resultados ainda não estão disponíveis.";
+                    + "A plataforma coleta o requisito, permite incluir documentação funcional e registra a conferência do analista. "
+                    + "Para trabalhar sem IA, use a entrada manual na lista de execuções. Perguntas livres não geram consultas automaticamente.";
         }
         registro.mensagem(conversaId, "ASSISTENTE", resposta, id);
         return registro.conversa(conversaId);

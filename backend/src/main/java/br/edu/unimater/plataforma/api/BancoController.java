@@ -16,7 +16,9 @@ public class BancoController {
     public record AmostraRequest(@NotBlank @Size(max = 63) String schema,
             @NotBlank @Size(max = 63) String tabela, @NotBlank @Size(max = 63) String coluna) {}
 
-    @GetMapping("/catalogo") public CatalogoService.Catalogo catalogo() { return catalogo.obter(); }
+    @GetMapping("/catalogo") public CatalogoService.Catalogo catalogo(@RequestParam(defaultValue="false") boolean atualizar) {
+        if(atualizar)catalogo.invalidar(); return catalogo.obter();
+    }
     @PostMapping("/subesquema") public CatalogoService.Catalogo selecionar(@Valid @RequestBody SubesquemaRequest req) {
         return catalogo.selecionar(req.requisito());
     }

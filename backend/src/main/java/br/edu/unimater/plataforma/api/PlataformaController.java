@@ -39,10 +39,7 @@ public class PlataformaController {
         registro.registrarTeste(id, cenarioId, req); return Map.of("salvo", true);
     }
     @GetMapping("/demandas/{chave}") public Demanda demanda(@PathVariable String chave) { return requisitos.obter(chave).demanda(); }
-    @PutMapping("/demandas/{chave}/status") public void status(@PathVariable String chave) {
-        throw new ErroApi(HttpStatus.NOT_IMPLEMENTED, "O MVP apenas lê o Jira. Altere a situação na própria ferramenta.");
-    }
-    @GetMapping("/metricas") public Metricas metricas() { return metricas.obter(); }
+    @GetMapping("/metricas") public Metricas metricas(@RequestParam(defaultValue="TODAS") String origem) { return metricas.obter(origem); }
     @GetMapping("/conversas") public List<ResumoConversa> conversas() { return conversas.listar(); }
     @GetMapping("/conversas/{id}") public Conversa conversa(@PathVariable long id) { return registro.conversa(id); }
     @PostMapping("/conversas/mensagens") public Conversa mensagem(@Valid @RequestBody MensagemRequest req) { return conversas.enviar(req); }

@@ -41,4 +41,12 @@ class CatalogoServiceTest {
         assertThat(service(10, 1, List.of("public.t\"abela.status")).amostrar("public", "t\"abela", "status").linhas()).containsExactly(List.of("ATIVO"));
         verify(banco).consultar("SELECT DISTINCT \"status\" FROM \"public\".\"t\"\"abela\" WHERE \"status\" IS NOT NULL LIMIT 3");
     }
+    @Test void cacheNaoRepeteColetaEAtualizacaoExplicitaInvalida() {
+        when(banco.consultar(anyString())).thenReturn(new Resultado(Verificacao.VAZIO,List.of(),List.of(),null,1));
+        var service=new CatalogoService(banco,new CatalogoProperties(List.of("public"),List.of(),3,10,1),60);
+        service.obter();service.obter();
+        verify(banco,times(2)).consultar(anyString());
+        service.invalidar();service.obter();
+        verify(banco,times(4)).consultar(anyString());
+    }
 }

@@ -13,34 +13,46 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class GeradorCenarios {
-    public static final String VERSAO = "cenarios-v1";
+    public static final String VERSAO = "cenarios-v2";
     private final ObjectMapper mapper;
     private final String prompt;
     public GeradorCenarios(ObjectMapper mapper) throws IOException {
         this.mapper = mapper;
         prompt = new ClassPathResource("prompts/" + VERSAO + ".txt").getContentAsString(StandardCharsets.UTF_8);
     }
-    public record CenarioGerado(String tipo, String titulo, String gherkin, String resultadoEsperado) {}
+    public record CenarioGerado(String tipo, String titulo, String gherkin, String resultadoEsperado,
+            String perguntaApuracao, boolean preservarOrdem) {}
     public record AtencaoGerada(String tipo, String texto) {}
     public record Geracao(String area, Boolean exigeApuracao, List<CenarioGerado> cenarios, List<AtencaoGerada> pontosAtencao) {}
     public String prompt() { return prompt; }
     public Geracao validar(ModeloGateway.Resposta resposta) {
+        return validar(resposta, false);
+    }
+    public Geracao validar(ModeloGateway.Resposta resposta, boolean documentacaoDisponivel) {
         try {
+            if (!resposta.completa()) throw new IllegalArgumentException();
             var g = mapper.readValue(resposta.texto(), Geracao.class);
             if (g == null || g.area() == null || !g.area().matches("ESTOQUE|VENDAS|NAO_IDENTIFICADA") || g.exigeApuracao() == null
                     || g.cenarios() == null || g.cenarios().isEmpty() || g.cenarios().size() > 20 || g.pontosAtencao() == null)
                 throw new IllegalArgumentException();
             for (var c : g.cenarios()) {
-                if (!"ALTERACAO".equals(c.tipo()) || vazio(c.titulo()) || c.titulo().contains("\n") || c.titulo().contains("\r")
-                        || vazio(c.resultadoEsperado()) || !gherkinValido(c.gherkin())) throw new IllegalArgumentException();
+                boolean pergunta = c != null && c.perguntaApuracao() != null && !c.perguntaApuracao().isBlank();
+                if (c == null || (pergunta && !g.exigeApuracao())
+                        || (!pergunta && ((c.gherkin()!=null&&c.gherkin().contains("«VALOR_APURADO»"))
+                        || (c.resultadoEsperado()!=null&&c.resultadoEsperado().contains("«VALOR_APURADO»"))))) throw new IllegalArgumentException();
+                if (!("ALTERACAO".equals(c.tipo()) || (documentacaoDisponivel && "REGRESSAO".equals(c.tipo())))
+                        || (c.perguntaApuracao() != null && c.perguntaApuracao().length() > 10000)
+                        || vazio(c.titulo()) || c.titulo().length()>1000 || c.titulo().contains("\n") || c.titulo().contains("\r")
+                        || vazio(c.resultadoEsperado()) || c.resultadoEsperado().length()>30000
+                        || c.gherkin()==null || c.gherkin().length()>30000 || !gherkinValido(c.gherkin())) throw new IllegalArgumentException();
             }
             for (var a : g.pontosAtencao()) {
-                if (a.tipo() == null || !a.tipo().matches("AMBIGUIDADE|MASSA|DOCUMENTACAO") || vazio(a.texto()))
+                if (a.tipo() == null || !a.tipo().matches("AMBIGUIDADE|MASSA|DOCUMENTACAO|REGRESSAO") || vazio(a.texto()))
                     throw new IllegalArgumentException();
             }
             return g;
         } catch (IOException | IllegalArgumentException e) {
-            throw new ErroApi(HttpStatus.BAD_GATEWAY, "Claude retornou cenários fora do contrato ou Gherkin inválido. Gere novamente.");
+            throw new ErroApi(HttpStatus.BAD_GATEWAY, "O modelo retornou cenários fora do contrato ou Gherkin inválido.");
         }
     }
     public static boolean gherkinValido(String passos) {

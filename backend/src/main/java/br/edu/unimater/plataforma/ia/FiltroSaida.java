@@ -11,8 +11,16 @@ public class FiltroSaida {
     private final String termos;
     public FiltroSaida(@Value("${plataforma.privacy.sensitive-terms}") String termos) { this.termos = termos; }
     public record Filtrado(String texto, Map<String, String> correspondencias) {}
+    public record ContextoFiltrado(String sistema,String contexto,Map<String,String> correspondencias) {}
     public Filtrado filtrar(String texto) {
         Map<String, String> mapa = new LinkedHashMap<>();
+        return new Filtrado(filtrar(texto,mapa),mapa);
+    }
+    public ContextoFiltrado filtrarPartes(String sistema,String contexto) {
+        Map<String,String> mapa=new LinkedHashMap<>();
+        return new ContextoFiltrado(filtrar(sistema,mapa),filtrar(contexto,mapa),mapa);
+    }
+    private String filtrar(String texto,Map<String,String> mapa) {
         texto = substituir(texto, "(?<!\\d)\\d{2}\\.?\\d{3}\\.?\\d{3}/?\\d{4}-?\\d{2}(?!\\d)", "CNPJ", mapa);
         texto = substituir(texto, "(?<!\\d)\\d{3}\\.?\\d{3}\\.?\\d{3}-?\\d{2}(?!\\d)", "CPF", mapa);
         texto = substituir(texto, "(?i)[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}", "EMAIL", mapa);
@@ -21,7 +29,7 @@ public class FiltroSaida {
             if (!termo.isBlank()) texto = substituir(texto,
                     "(?iu)(?<![\\p{L}\\p{N}])" + Pattern.quote(termo.strip()) + "(?![\\p{L}\\p{N}])", "TERMO", mapa);
         }
-        return new Filtrado(texto, mapa);
+        return texto;
     }
     private String substituir(String texto, String regex, String tipo, Map<String, String> mapa) {
         return Pattern.compile(regex).matcher(texto).replaceAll(match -> {

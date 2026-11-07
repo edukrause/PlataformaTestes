@@ -3,7 +3,7 @@ package br.edu.unimater.plataforma.banco;
 import java.util.*;
 
 public interface ConsultaBancoGateway {
-    enum Verificacao { VALIDO, VAZIO, REJEITADO_SINTAXE, ERRO_EXPLAIN, ERRO_EXECUCAO, LIMITE_EXCEDIDO }
+    enum Verificacao { VALIDO, VAZIO, REJEITADO_SINTAXE, ERRO_EXPLAIN, ERRO_EXECUCAO, LIMITE_EXCEDIDO, ERRO_GERACAO }
     record Coluna(String nome, String tipo, int escala) {}
     record Resultado(Verificacao verificacao, List<Coluna> colunas, List<List<Object>> linhas,
                      String mensagemErro, long latenciaMs) {

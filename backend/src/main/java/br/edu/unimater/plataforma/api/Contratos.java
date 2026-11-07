@@ -16,7 +16,7 @@ public final class Contratos {
                                   boolean usarDocumentacao) {}
     public record RevisaoRequest(@NotBlank @Size(max = 120) String analista,
             @NotBlank @Pattern(regexp = "ACEITO|ACEITO_ALTERACAO|REJEITADO") String decisao,
-            @NotNull Map<Long, String> valoresCorrigidos, @PositiveOrZero long tempoRevisaoS,
+            @NotNull @Size(max = 100) Map<@Positive Long, @NotBlank @Size(max = 10000) String> valoresCorrigidos, @PositiveOrZero long tempoRevisaoS,
             @NotNull @Size(max = 10000) String comentario) {}
     public record ExecucaoTeste(
             @NotBlank @Pattern(regexp = "PASSOU|FALHOU|BLOQUEADO") String resultado,
@@ -24,13 +24,13 @@ public final class Contratos {
             @NotNull @Size(max = 10000) String observacao,
             @NotBlank @Size(max = 120) String executadoPor, @NotNull Instant executadoEm) {}
     public record Tarefa(long id, String chaveJira, String titulo, String area, String requisito,
-                         String documentacaoRef, Instant coletadaEm) {}
+                         String documentacaoRef, Instant coletadaEm, String origem) {}
     public record Demanda(String chaveJira, String status, String criadaEm, String prazo, BigDecimal estimativaH) {}
     public record Cenario(long id, String tipo, String titulo, String gherkin, String resultadoEsperado,
                            boolean sintaxeValida, ExecucaoTeste execucaoTeste) {}
     public record PontoAtencao(String tipo, String texto) {}
     public record Revisao(long id, String analista, String decisao, int valoresAlterados,
-                          long tempoRevisaoS, String comentario, Instant registradaEm) {}
+                          long tempoRevisaoS, String comentario, Instant registradaEm, Map<Long, String> valoresCorrigidos) {}
     public record Execucao(long id, Tarefa tarefa, String versaoPrompt, String status, String etapa,
             boolean exigeApuracao, long tempoTotalMs, BigDecimal custoTotalUsd, Instant iniciadaEm,
             List<Cenario> cenarios, List<JsonNode> apuracoes, List<PontoAtencao> pontosAtencao,
@@ -46,5 +46,6 @@ public final class Contratos {
                                   double latenciaMediaMs) {}
     public record Metricas(long totalExecucoes, long totalApuracoes, Map<String, Long> desfechos,
             Map<String, Long> decisoes, double valoresAlteradosPct, BigDecimal custoMedioApuracaoUsd,
-            double tempoMedioApuracaoS, List<MetricaProvedor> porProvedor) {}
+            double tempoMedioApuracaoS, List<MetricaProvedor> porProvedor, long referenciasRevisadas,
+            long apuracoesManuais, long apuracoesModelos) {}
 }
