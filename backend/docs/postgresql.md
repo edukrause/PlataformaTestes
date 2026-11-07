@@ -1,17 +1,25 @@
-# PostgreSQL de homologação
+# PostgreSQL: leitura, catálogo e apuração
 
-PostgreSQL substitui o MySQL como fonte de dados consultada. H2 continua guardando o histórico da plataforma.
-O módulo é independente do Jira e dos modelos: já pode validar e executar consultas informadas manualmente.
-`apuracao` e `candidato_sql` registram consultas, resultados e a decisão de consenso.
-Uma consulta isolada em `/api/banco/consultas` não é contabilizada como apuração.
+PostgreSQL é a fonte de dados consultada. H2 guarda o histórico local e recebe as migrações Flyway.
+O PostgreSQL do ERP nunca recebe essas migrações nem qualquer escrita da plataforma.
 
-## Configurar
+## Configuração
 
-Exporte as variáveis de `backend/.env.example`. O Spring não carrega `.env` automaticamente.
-Ative `ERP_POSTGRES_HABILITADO=true` e informe URL JDBC, usuário e senha.
-A conexão PostgreSQL não substitui o datasource H2 nem recebe as migrações Flyway da plataforma.
+Preencha as variáveis de [../.env.example](../.env.example), copiando para `backend/.env` sem substituir
+credenciais existentes. Inicie o servidor de `backend` para importar esse arquivo.
 
-O DBA deve preparar uma conta dedicada, com acesso apenas às tabelas permitidas. Exemplo a adaptar ao banco:
+- `ERP_POSTGRES_HABILITADO=true`
+- URL JDBC PostgreSQL, usuário dedicado e senha.
+- Timeout de 1–60 segundos, limite de linhas de 1–10000 e limite de caracteres.
+- `ERP_CATALOGO_SCHEMAS`: schemas visíveis no catálogo; padrão public.
+- `ERP_CATALOGO_MAX_TABELAS` e `ERP_CATALOGO_PROFUNDIDADE`: seleção por termos e expansão por FKs.
+- `ERP_AMOSTRA_COLUNAS`: nomes completos separados por vírgula, vazio por padrão.
+- `ERP_AMOSTRA_MAX_VALORES`: limite de valores distintos por coluna (padrão 5, máximo 20).
+- `ERP_CATALOGO_CACHE_SEGUNDOS`: cache em memória de 0–3600 segundos (padrão 60).
+- `ERP_AMOSTRA_ENVIAR_MODELOS`: falso por padrão. Verdadeiro autoriza incluir amostras das colunas
+  permitidas do subesquema no contexto dos modelos, passando pelo filtro de saída.
+
+O DBA deve conceder somente o necessário à conta dedicada. Exemplo a adaptar:
 
 ```sql
 CREATE ROLE plataforma_leitura LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION;
@@ -21,127 +29,109 @@ GRANT SELECT ON ALL TABLES IN SCHEMA public TO plataforma_leitura;
 ALTER ROLE plataforma_leitura SET default_transaction_read_only = on;
 ```
 
-Defina a senha com `\password plataforma_leitura` no psql. A aplicação recusa contas superusuárias.
-Novas tabelas exigem novos GRANTs ou default privileges definidos pelo proprietário.
+Defina a senha com o comando interativo do psql. A plataforma recusa superusuários.
+Novas tabelas exigem novos GRANTs. O filtro de schemas regula o catálogo; os GRANTs regulam
+o acesso efetivo das consultas. Uma coluna na lista de amostras deve ser adequada para essa finalidade.
 
-## Consultar
+## Consulta isolada
 
 ```http
 POST /api/banco/consultas
 Content-Type: application/json
 
-{"consulta":"SELECT sum(preco) AS total FROM public.produto"}
+{"consulta":"SELECT sum(saldo) AS saldo FROM public.estoque"}
 ```
 
-Use nomes qualificados (`public.produto`): o `search_path` da sessão contém apenas `pg_catalog`, para que
-funções de outro schema não substituam funções internas durante a avaliação de SQL gerado.
-O endpoint responde com `verificacao`, `colunas`, `linhas`, `mensagemErro` e `latenciaMs`.
-Valores NULL permanecem nulos, números decimais preservam precisão e timestamptz usa UTC.
+Use nomes qualificados. A sessão usa search_path restrito a pg_catalog.
+O retorno contém verificacao, colunas, linhas, mensagemErro e latenciaMs.
+A consulta isolada não conta como apuração e não vota em consenso.
 
-Fluxo: parser JSQLParser → um SELECT → regras de leitura e funções permitidas → transação READ ONLY
-em REPEATABLE READ → EXPLAIN sem ANALYZE → execução limitada → rollback e fechamento da conexão.
-O SQL executado é a representação do AST validado.
+Fluxo: AST JSQLParser → um SELECT permitido → transação READ ONLY/REPEATABLE READ → EXPLAIN sem ANALYZE
+→ execução com limites → rollback e fechamento da conexão.
+São bloqueados escrita, múltiplas instruções, SELECT INTO, locks, CTEs de escrita e funções fora da lista.
+Permissões limitadas no banco continuam obrigatórias: o parser não é um sandbox de funções arbitrárias.
 
-- Instruções múltiplas, escrita em CTE, SELECT INTO, bloqueios e funções fora da lista são rejeitados antes da conexão.
-- A lista conservadora cobre agregações, datas, texto e funções analíticas usuais; sintaxes não suportadas são recusadas.
-- Permissões restritas no banco continuam obrigatórias; o parser não é um sandbox de funções PostgreSQL arbitrárias.
-- Resultado vazio é `VAZIO`; falhas de plano e execução são distinguidas, sem expor SQL, credenciais ou mensagens internas.
-- Se linhas ou caracteres excederem o limite, o resultado inteiro é descartado como `LIMITE_EXCEDIDO`.
-  Um resultado truncado não pode fundamentar consenso.
-- O endpoint fica indisponível com HTTP 503 enquanto a integração estiver desativada.
+Resultado vazio é VAZIO. Erros de plano e execução são distintos, sem mensagens internas do banco.
+Exceder linhas/caracteres descarta o resultado inteiro; truncamentos não podem fundamentar consenso.
+Com a integração desativada, os endpoints de banco respondem 503.
 
-## Testes com PostgreSQL real
+## Catálogo e amostragem
 
-O workflow usa instâncias descartáveis PostgreSQL 16 e 18. Para rodar localmente, aponte
-`PLATAFORMA_TEST_PG_URL`, `PLATAFORMA_TEST_PG_ADMIN` e `PLATAFORMA_TEST_PG_SENHA` para um banco dedicado aos testes
-e execute `mvn verify`. Não use o banco de homologação: o teste cria um schema e um papel com nomes aleatórios,
-carrega fixtures sintéticas e remove apenas esses objetos ao terminar.
+- `GET /api/banco/catalogo`: tabelas, colunas, tipos, nulabilidade e relacionamentos acessíveis.
+- `GET /api/banco/catalogo?atualizar=true`: invalida os caches de catálogo/amostras e faz nova coleta.
+- `POST /api/banco/subesquema` com `{"requisito":"Saldo do estoque"}`: seleção lexical sem acentos/caixa,
+  seguida de expansão pelas FKs. Sem correspondência, a seleção fica vazia.
+- `POST /api/banco/amostras` com `{"schema":"public","tabela":"produto","coluna":"status"}`:
+  valores distintos e não nulos, somente para colunas explicitamente permitidas.
 
-Sem `PLATAFORMA_TEST_PG_URL`, somente os testes que precisam de PostgreSQL são ignorados; os demais continuam rodando.
-Os testes reais verificam tipos e nulos, limites, falhas de EXPLAIN, cancelamento por tempo e bloqueio de escrita.
+Colunas são obtidas pelo INFORMATION_SCHEMA. FKs usam pg_catalog.pg_constraint, porque contas com
+apenas SELECT podem não enxergar constraints pelo INFORMATION_SCHEMA.
+Pares de chaves compostas preservam posições; relações para colunas inacessíveis são excluídas.
+Se uma coleta ultrapassar os limites, a operação falha integralmente.
+Catálogo e FKs usam transações separadas: mantenha o esquema estável durante a coleta.
+As amostras têm cache limitado a 128 entradas, respeitando TTL e autorização.
 
-Referências: [transações somente leitura](https://www.postgresql.org/docs/18/sql-set-transaction.html),
-[JSQLParser](https://github.com/JSQLParser/JSqlParser/releases/tag/jsqlparser-5.3).
+## Apuração manual
 
-## Comparação de resultados e consenso
-
-`NormalizadorResultados` e `MotorConsenso` são componentes internos, testáveis sem IA.
-A execução isolada de `/api/banco/consultas` não dispara nem persiste uma apuração por consenso.
-
-A normalização ignora aliases e ordem de colunas; ignora ordem de linhas somente quando a apuração não exige
-ordenamento. Nulos, textos, números, booleanos e datas recebem marcadores distintos. Linhas repetidas são
-preservadas. Números usam a escala informada pelo PostgreSQL; se a expressão não fornecer precisão,
-usa-se escala de duas casas e arredondamento HALF_UP. Instantes com fuso são comparados em UTC.
-
-A relação entre os valores das colunas é preservada: as células de uma linha não são ordenadas isoladamente.
-Colunas com a mesma distribuição de valores exigem permutações globais para produzir uma forma canônica.
-O cálculo admite até 120 alternativas e, se houver ambiguidade maior, descarta o candidato para conferência
-manual, em vez de emitir um hash aproximado. A tabela admite até 64 colunas e 100000 células nesta etapa.
-
-Cada família de modelo tem um único voto final. Retentativas do mesmo provedor não são votos adicionais.
-Três resultados iguais produzem UNANIME; dois produzem MAIORIA; dois ou mais válidos sem acordo produzem
-DIVERGENTE; menos de dois válidos produzem FALHA. Erros, vazios, truncamentos e resultados não normalizáveis
-não votam. A forma canônica completa fundamenta o acordo e o SHA-256 permite rastreá-la.
-Consenso fornece uma referência apurada; a validação da regra de negócio permanece com o analista.
-
-## Catálogo, relacionamentos e amostras
-
-- `GET /api/banco/catalogo`: tabelas, colunas, tipos, nulabilidade e pares de chaves estrangeiras.
-- `POST /api/banco/subesquema`, com `{"requisito":"Consultar saldo do estoque"}`: seleciona tabelas
-  por termos do nome da tabela e das colunas, ignorando acentos e caixa, e expande pelos relacionamentos.
-  Sem correspondência, retorna seleção vazia; não escolhe tabelas arbitrariamente.
-- `POST /api/banco/amostras`, com `{"schema":"public","tabela":"produto","coluna":"status"}`:
-  lê valores distintos não nulos somente das colunas explicitamente autorizadas.
-
-`ERP_CATALOGO_SCHEMAS` limita os schemas visíveis no catálogo (padrão `public`). As permissões SELECT
-da conta continuam obrigatórias. `ERP_AMOSTRA_COLUNAS` começa vazio e recebe nomes completos separados
-por vírgula, por exemplo `public.produto.status,public.movimento.tipo`. A amostragem não é disparada
-automaticamente e não é enviada a modelos. Não inclua dados pessoais nessa lista.
-`ERP_AMOSTRA_MAX_VALORES` limita cada amostra (padrão 5, máximo 20). Nomes são conferidos no catálogo
-e escapados como identificadores SQL, inclusive quando contêm aspas.
-
-O catálogo usa INFORMATION_SCHEMA para as colunas e `pg_catalog.pg_constraint` para as FKs, porque
-INFORMATION_SCHEMA pode omitir constraints de tabelas às quais a conta só tem SELECT. Pares de chaves
-compostas preservam suas posições. Relacionamentos para colunas não visíveis são excluídos.
-Cada leitura reutiliza os limites e a transação somente leitura do gateway PostgreSQL. Se o catálogo
-exceder os limites, a operação falha integralmente; não seleciona um subesquema incompleto.
-`ERP_CATALOGO_MAX_TABELAS` (12) e `ERP_CATALOGO_PROFUNDIDADE` (1) limitam a seleção.
-O catálogo e as FKs são lidos em transações separadas; mantenha o esquema estável durante a coleta.
-O filtro de schemas regula o catálogo, enquanto os GRANTs regulam o acesso das consultas ao banco.
-
-## Apuração persistida sem integrar IA
-
-Uma execução concluída e ainda não revisada pode receber consultas finais informadas pelo analista:
+Uma execução concluída e ainda não revisada pode receber:
 
 ```http
 POST /api/execucoes/1/apuracoes
 Content-Type: application/json
 
-{
-  "cenarioId": 1,
-  "pergunta": "Saldo do estoque",
-  "preservarOrdem": false,
-  "candidatos": [
-    {"provedor": "CLAUDE", "consulta": "SELECT sum(saldo) AS saldo FROM public.estoque"},
-    {"provedor": "GEMINI", "consulta": "SELECT sum(saldo) AS total FROM public.estoque"},
-    {"provedor": "LLAMA", "consulta": "SELECT sum(saldo) AS quantidade FROM public.estoque"}
-  ]
-}
+{"cenarioId":1,"pergunta":"Saldo do estoque","preservarOrdem":false,"candidatos":[
+  {"provedor":"GEMINI","consulta":"SELECT sum(saldo) FROM public.estoque"},
+  {"provedor":"LLAMA","consulta":"SELECT sum(saldo) AS total FROM public.estoque"}
+]}
 ```
 
-`cenarioId` pode ser omitido; quando informado, deve pertencer à execução. A resposta contém o ID
-da apuração; `GET /api/execucoes/{id}` retorna referência, consultas, resultados, hashes e descartes.
-São aceitos de um a três provedores distintos. Cada consulta passa pelo verificador e pelo PostgreSQL;
-SQL recusado, vazio e erro não votam. Falhas de configuração interrompem a operação sem salvar resultados
-parciais. O registro H2 é atômico, e uma revisão concorrente impede salvar novas apurações.
+São aceitos de um a três provedores distintos. cenarioId pode ser omitido; quando informado, deve
+pertencer à execução. A origem é MANUAL; o provedor é declarado pelo analista, sem autenticação dessa
+origem. Modelo INFORMADO_MANUALMENTE, tokens/custos zero. Não há chamada de IA nesse endpoint.
+SQL recusado, vazio e erro não votam. Configuração inválida não salva apuração parcial.
 
-Este endpoint **não chama modelos**: `origem=MANUAL` e `modelo=INFORMADO_MANUALMENTE` deixam isso explícito.
-O nome do provedor é declarado pelo analista, sem autenticação de sua origem; os tokens e custos são zero.
-Os testes do fluxo usam substitutos dos gateways, sem depender de Jira ou IA reais.
-Cada candidato e a coleta do catálogo usam transações PostgreSQL próprias: não há snapshot compartilhado
-entre os provedores. Dados alterados durante a apuração podem gerar divergência.
+## Apuração automática
 
-Quando há acordo e cenário associado, o resultado esperado recebe um marcador `«A<id>»`, que a interface
-já apresenta com o valor da referência. Sem acordo, recebe um aviso para conferência manual. O Gherkin
-original é preservado. Histórico e métricas refletem as apurações salvas, separadas dos custos de geração
-de cenários. Corrigir valores na revisão e gerar SQL automaticamente continuam pendentes.
+`POST /api/execucoes/{id}/apuracoes/automaticas` recebe cenarioId opcional, pergunta e preservarOrdem.
+Habilite Gemini e Llama/Groq, configure chaves/modelos/preços e informe as regras em DOMINIO_REGRAS.
+O catálogo selecionado é enviado no contexto. Cada provedor gera um SELECT independente; uma consulta
+inválida pode ser refeita uma vez. Não há participação de Claude nesta entrega.
+
+Cenários gerados com perguntaApuracao também disparam esse fluxo durante a geração.
+Todas as chamadas são auditadas; tentativas anteriores não ganham votos adicionais.
+O candidato final agrega tokens, custo e latência das tentativas. Falha de geração fica ERRO_GERACAO.
+Cenários podem permanecer concluídos com uma pendência explícita quando falta configuração para apurar.
+
+A apuração em andamento impede revisão concorrente. O registro da decisão e dos candidatos é atômico
+no H2. Detalhe e histórico devolvem consultas, resultados, hashes, descartes, origem e custos.
+Quando há acordo, o marcador VALOR_APURADO vira uma referência A<id> no cenário; a interface resolve
+o valor. Correções do analista ficam separadas da referência original e mantêm histórico.
+
+## Normalização e consenso
+
+Aliases e ordem de colunas são ignorados. A ordem das linhas só é preservada quando solicitada.
+Nulos, textos, números, booleanos e datas têm marcadores distintos; duplicatas e relações entre células
+são preservadas. Escala decimal informada pelo banco é respeitada; sem precisão, usa-se duas casas
+com HALF_UP. Instantes com fuso são comparados em UTC.
+
+Permutações de colunas ambíguas são limitadas a 120 alternativas, 64 colunas e 100000 células.
+Ambiguidade excessiva descarta o candidato, sem hash aproximado. A representação canônica completa
+fundamenta o acordo; o SHA-256 serve à rastreabilidade.
+
+Três iguais produzem UNANIME; dois iguais, MAIORIA; dois ou mais válidos sem acordo, DIVERGENTE;
+menos de dois válidos, FALHA. Sem Claude, o fluxo automático atual pode produzir MAIORIA com os dois
+provedores habilitados. Consenso requer conferência da regra de negócio pelo analista.
+Cada candidato usa seu próprio snapshot: dados alterados entre consultas podem gerar divergência.
+
+## Testes reais
+
+A CI usa instâncias descartáveis PostgreSQL 16/18. Localmente, aponte PLATAFORMA_TEST_PG_URL,
+PLATAFORMA_TEST_PG_ADMIN e PLATAFORMA_TEST_PG_SENHA para um banco exclusivo de teste.
+Os testes criam/removem somente fixtures com nomes aleatórios. Não aponte para homologação.
+
+Sem a URL de teste, os testes reais são ignorados. O teste novo cobre catálogo com conta SELECT,
+FKs compostas, permissões e amostragem, além de tipos, limites, EXPLAIN, timeout e bloqueio de escrita.
+Consulte [continuidade](../../docs/CONTINUIDADE.md) para distinguir testes executados dos ignorados.
+
+Referências: [PostgreSQL](https://www.postgresql.org/docs/18/sql-set-transaction.html),
+[JSQLParser](https://github.com/JSQLParser/JSqlParser/releases/tag/jsqlparser-5.3).

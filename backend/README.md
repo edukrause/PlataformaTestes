@@ -1,162 +1,146 @@
-# Backend — estrutura e integrações
+# Backend e aplicação local
 
-Java 21, Spring Boot 3.5, Maven, JDBC, Flyway e H2 em arquivo.
-A integração com Claude fica para a etapa final. Por padrão, `PLATAFORMA_IA_MODO=desativada`:
-o processo inicia sem credenciais de IA e permite consultar histórico, métricas e revisar execuções existentes.
-Pedidos de geração retornam HTTP 503 antes de consultar o Jira ou gravar uma execução.
-O frontend existente continua compatível com a API; seu modo `mock` permanece separado do backend.
+Java 21, Spring Boot 3.5, JDBC, Flyway e H2. PostgreSQL é a fonte consultada em modo somente leitura.
+O Claude permanece pendente. A aplicação funciona sem IA pela entrada manual e pode gerar cenários
+e SQL com Gemini e Llama/Groq quando as respectivas credenciais forem configuradas.
 
-## Organização
+## Executar o aplicativo
 
-- `api`: contratos HTTP, validação de entrada e respostas de erro.
-- `contexto`: porta de leitura de requisitos (`RequisitoGateway`).
-- `jira`: adaptador HTTP dessa porta.
-- `execucao`: geração, consulta e persistência transacional das execuções.
-- `conversa`: mensagens e encaminhamento de pedidos de geração.
-- `cenario`: contrato e validação sintática dos cenários.
-- `banco`: validação SQL, leitura PostgreSQL, catálogo, relacionamentos e amostragem permitida.
-- `apuracao`: execução dos candidatos informados manualmente, normalização e consenso persistido.
-- `ia`: porta `ModeloGateway`, implementação desativada e adaptador da API guardado como opção.
-- `metrica`: indicadores da avaliação, separados das chamadas de geração.
-
-Os casos de uso dependem das portas, permitindo testar o fluxo com implementações substitutas sem consumir APIs.
-Um futuro adaptador de terminal pode implementar `ModeloGateway` sem alterar persistência ou interface.
-
-## Executar
-
-Use JDK 21 e Maven 3.6.3 ou superior. Configure as variáveis no terminal que iniciará o backend
-ou no ambiente de execução da IDE. Veja os nomes em [.env.example](.env.example).
-O arquivo `.env` não é carregado automaticamente pelo Spring.
-
-Exemplo PowerShell, preenchendo as credenciais somente no seu terminal:
-
-Para desenvolver a estrutura, basta `mvn spring-boot:run` com Java 21. As configurações abaixo
-só são necessárias quando as respectivas integrações forem usadas. Para retomar o adaptador da API,
-defina explicitamente `PLATAFORMA_IA_MODO=api` e configure o modelo e as credenciais.
-
-```powershell
-$env:JAVA_HOME = 'CAMINHO_DO_SEU_JDK_21'
-$env:Path = "$env:JAVA_HOME\bin;$env:Path"
-$env:JIRA_BASE_URL = 'https://sua-empresa.atlassian.net'
-$env:JIRA_EMAIL = 'seu-email@empresa.com'
-$env:JIRA_API_TOKEN = 'seu-token'
-$env:ANTHROPIC_API_KEY = 'sua-chave'
-$env:ANTHROPIC_MODEL = 'ID_DO_MODELO_ESCOLHIDO'
-$env:ANTHROPIC_INPUT_PRICE = 'PRECO_POR_MILHAO'
-$env:ANTHROPIC_OUTPUT_PRICE = 'PRECO_POR_MILHAO'
-cd backend
-mvn spring-boot:run
-```
-
-Selecione um modelo disponível na sua conta e configure os preços de entrada e saída da mesma versão.
-Sem preços a chamada é recusada, para não registrar custo zero como se fosse uma medição real.
-O servidor fica em `http://127.0.0.1:8080`, restrito ao computador local. A base fica em `backend/data/`
-quando o processo é iniciado de `backend`. O console web do H2 não está habilitado.
-A aplicação inicia sem chaves; a configuração é exigida ao usar a integração.
-
-Em outro terminal:
-
-```powershell
-cd frontend
-# Crie frontend/.env.local com a linha VITE_API=http
-npm install
-npm run dev
-```
-
-Quando a integração estiver ativada, abra o endereço mostrado pelo Vite e envie
-`Gere os cenários de PROJ-123`, com uma chave real do seu Jira.
-O proxy do Vite encaminha `/api` ao backend. A hospedagem no GitHub Pages continua sendo apenas o protótipo;
-ela não hospeda processos Java. A geração é síncrona e pode levar até dois minutos, além da coleta no Jira.
-Não repita o envio enquanto estiver aguardando.
-
-Para Jira Data Center, o adaptador também admite `JIRA_API_VERSION=2` e `JIRA_AUTH_MODE=bearer`.
-Confirme a autenticação suportada pelo servidor. Jira Cloud usa versão 3, e-mail e API token;
-tokens com escopos podem exigir a URL de gateway da Atlassian com o cloud ID.
-O campo de área é opcional (`JIRA_AREA_FIELD=customfield_12345`); sem evidência, a interface mostra
-“Área a confirmar”. O mapeamento de situação deve ser conferido contra o workflow real do projeto.
-
-## API
-
-| Método | Caminho | Operação |
-|---|---|---|
-| GET | `/api/saude` | Disponibilidade do processo |
-| GET / POST | `/api/execucoes` | Histórico / geração pelo requisito |
-| GET | `/api/execucoes/{id}` | Cenários, custo, pendências e erro |
-| POST | `/api/execucoes/{id}/revisao` | Conferência corrente do analista |
-| GET | `/api/execucoes/{id}/revisoes` | Histórico de decisões do analista, da mais antiga à mais recente |
-| PUT | `/api/execucoes/{id}/cenarios/{cenarioId}/execucao` | Resultado manual do teste; `null` desfaz |
-| GET | `/api/demandas/{chave}` | Metadados atuais da tarefa no Jira |
-| GET | `/api/metricas` | Contagens da avaliação; apurações ficam zeradas enquanto não existem |
-| GET | `/api/conversas` | Histórico de conversas |
-| GET | `/api/conversas/{id}` | Mensagens de uma conversa |
-| POST | `/api/conversas/mensagens` | Pedir geração informando a chave |
-| POST | `/api/banco/consultas` | Validar e executar um SELECT no PostgreSQL, quando habilitado |
-| GET | `/api/banco/catalogo` | Catálogo dos schemas configurados e relacionamentos visíveis |
-| POST | `/api/banco/subesquema` | Seleção por termos e expansão pelas chaves estrangeiras |
-| POST | `/api/banco/amostras` | Valores distintos de uma coluna explicitamente permitida |
-| POST | `/api/execucoes/{id}/apuracoes` | Verificar consultas manuais e salvar consenso, referência e candidatos |
-
-O contrato segue `frontend/src/api/tipos.ts`. O detalhe acrescenta `mensagemErro` e
-`apuracaoDisponivel` indica se já existe alguma apuração registrada. Não confunda conclusão da geração
-com execução dos testes ou validação dos valores pelo analista.
-Metadados na listagem são o retrato coletado; o endpoint de demanda faz uma nova leitura do Jira.
-A conversa reconhece chaves e orienta o usuário; ainda não é um chat livre com o modelo.
-
-## Persistência e auditoria
-
-Flyway cria as seis tabelas do domínio e três tabelas de suporte: `chamada_modelo`, `conversa` e `mensagem`.
-Cada coleta gera um retrato da tarefa, preservando requisitos anteriores. Chamadas de cenários registram
-modelo devolvido pelo provedor, prompt efetivamente enviado, resposta, correspondências de pseudonimização,
-tokens, custo calculado e latência. Isso fica separado dos candidatos SQL para não contaminar suas métricas.
-Resposta inválida mantém a chamada e o custo, e deixa a execução com erro. Gerações interrompidas por
-encerramento são marcadas com erro na próxima inicialização.
-
-O gateway inicial usa a Messages API por HTTP, atrás de `ModeloGateway`. É uma simplificação de implementação
-em relação ao Spring AI proposto na E4; migrar o adaptador para Spring AI não precisa alterar o fluxo.
-Prompts estão versionados em `src/main/resources/prompts`.
-
-O filtro substitui padrões de CPF, CNPJ, e-mail e telefone e os nomes/termos configurados em `SENSITIVE_TERMS`.
-Ele **não reconhece todos os nomes próprios ou informações confidenciais automaticamente**. Revise os requisitos
-e configure os termos antes de usar dados empresariais. A base local contém requisito original e correspondências;
-mantenha-a sob o controle de acesso da empresa. Nenhum resultado de banco é enviado ao provedor.
-
-## Limites desta entrega
-
-PostgreSQL substitui o MySQL como fonte de homologação. O módulo de leitura já valida SELECT, verifica o plano
-e executa consultas com limites em transação somente leitura, independentemente da IA.
-Veja [configuração, endpoint e testes](docs/postgresql.md).
-Catálogo, seleção do subesquema e amostras autorizadas estão implementados. Normalização e consenso
-estão ligados ao registro das apurações e à composição do resultado esperado com marcador de referência.
-O novo endpoint recebe consultas informadas manualmente; ele não gera SQL nem autentica a origem dos modelos.
-Confluence, geração SQL pelos modelos, correção de valores na revisão e exportação ainda estão pendentes.
-`usarDocumentacao` é recebido por compatibilidade com o frontend, mas esta versão sempre registra a ausência
-de documentação e gera apenas cenários de alteração. Alterar situação ou publicar cenários no Jira não está
-habilitado; a tentativa de alteração de situação retorna 501.
-A revisão guarda a decisão corrente e todas as alterações em `historico_revisao`, na mesma transação.
-A migração V2 copia as revisões já existentes para o histórico sem alterar a V1.
-Os IDs do histórico pertencem à trilha de auditoria; a revisão corrente continua no detalhe da execução.
-Build único com frontend e backend ainda está pendente (B01 parcial). Não considere B01–B11 concluídos.
-
-## Verificação
+O executável inclui a interface React. Após construir:
 
 ```powershell
 cd backend
-mvn test
-mvn package
 java -jar target/plataforma-testes-0.1.0-SNAPSHOT.jar
 ```
 
-Os testes usam H2 em memória e substituem Jira e o modelo por doubles, sem consumo de API:
-geração, histórico, revisão, conversa, erros, custo de resposta inválida, validação de entrada,
-Gherkin, pseudonimização, IA desativada, histórico de decisões e migração de revisões existentes.
-O módulo PostgreSQL acrescenta testes de parser, transações, limites, tipos e cancelamento de consultas,
-além dos testes de normalização e consenso. Veja as variáveis do banco descartável em [PostgreSQL](docs/postgresql.md).
-Os testes novos cobrem seleção por relacionamentos, amostragem autorizada, catálogo incompleto, persistência
-dos candidatos, composição, métricas, descarte de escrita e bloqueio de apurações após revisão.
-Um teste com credenciais reais ainda é necessário no seu ambiente quando a integração for retomada.
-O workflow `.github/workflows/verifica.yml` executa `mvn verify`, build e lint do frontend em pushes e PRs.
+Abra http://127.0.0.1:8080. A aplicação fica restrita ao computador local. O H2 é salvo em
+`backend/data` quando iniciada dessa pasta. Credenciais e dados locais não são versionados.
+O modo de demonstração no GitHub Pages continua separado, com dados simulados.
 
-Referências: [Spring Boot 3.5](https://docs.spring.io/spring-boot/3.5/system-requirements.html),
-[Jira Cloud](https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issues/),
-[autenticação Jira](https://developer.atlassian.com/cloud/jira/platform/basic-auth-for-rest-apis/),
-[Claude Messages](https://platform.claude.com/docs/en/api/messages/create).
+Para construir tudo na raiz, use `scripts/build.ps1` no Windows ou `sh scripts/build.sh` em Linux/macOS.
+São necessários Java 21, Maven e Node 22. Os scripts executam instalação, lint, build da interface
+em modo HTTP e `mvn clean verify`, incluindo os arquivos estáticos no JAR.
+
+Alternativa no Windows, sem executar um script PowerShell:
+
+```powershell
+cd frontend
+npm.cmd ci
+$env:VITE_API = 'http'
+npm.cmd run lint
+npm.cmd run build
+cd ../backend
+mvn.cmd clean verify
+java -jar target/plataforma-testes-0.1.0-SNAPSHOT.jar
+```
+
+No desenvolvimento, também é possível usar Vite com `VITE_API=http` e o backend em processos separados.
+
+## Configurar integrações
+
+Copie [.env.example](.env.example) para `backend/.env`, sem substituir um arquivo já configurado.
+Inicie a aplicação de `backend`: ela importa esse arquivo como properties; variáveis exportadas no
+terminal têm precedência. Não preencha segredos em arquivos versionados.
+
+- **Sem IA:** mantenha `PLATAFORMA_IA_MODO=desativada` e use Execuções → Nova execução → Entrada manual.
+- **Geração:** defina `PLATAFORMA_IA_MODO=externa`, escolha `PLATAFORMA_IA_PROVEDOR=GEMINI` ou `LLAMA`,
+  habilite o provedor e informe chave, ID de modelo e preços por milhão de tokens.
+- **Consenso automático:** habilite Gemini e Llama/Groq. São duas famílias participantes; dois resultados
+  equivalentes produzem MAIORIA. UNANIME continua exigindo três votos. Claude não participa deste fluxo.
+- **Jira:** URL HTTPS, autenticação e API 2/3. `JIRA_STATUS_MAPA` associa IDs de situações ao vocabulário da plataforma.
+- **Confluence:** URL base incluindo `/wiki` no Cloud, autenticação, API 2 (Cloud) ou 1 (REST anterior) e
+  `CONFLUENCE_PAGINAS` no formato `ESTOQUE:12345,PROJ-123:67890`. O mapeamento por tarefa prevalece sobre a área.
+  Solicitar documentação sem configuração válida produz uma pendência/erro explícito.
+- **PostgreSQL:** conta dedicada com SELECT e sem superusuário. Veja [PostgreSQL](docs/postgresql.md).
+- **Domínio:** preencha `DOMINIO_REGRAS` com as regras reais de empresa, filial, cancelados e exclusão lógica.
+  O gerador SQL recusa iniciar sem essas regras. O texto orienta o prompt; o analista verifica sua aplicação.
+- **Escrita no Jira:** `JIRA_ESCRITA_HABILITADA=true` habilita ações explícitas na interface.
+  `JIRA_TRANSICOES` associa situações a IDs de transições reais, por exemplo `EM_TESTE:31`.
+  Publicação de cenários exige revisão aceita. Não há publicação automática.
+
+Nenhuma chamada aos provedores é feita na inicialização. Preços não são presumidos: configure o preço
+da versão escolhida, incluindo zero somente quando essa for a condição real da sua conta.
+O adaptador legado de Claude foi preservado, mas sua integração e validação continuam pendentes.
+
+## Fluxo
+
+1. Coletar a tarefa do Jira ou registrar requisito e cenários manuais.
+2. Se solicitado, ler a documentação do Confluence e guardar referência, versão, texto e hash.
+3. Gerar cenários com o modelo escolhido. Validar JSON e Gherkin; refazer uma vez quando inválidos.
+   Regressão só é admitida quando documentação funcional foi efetivamente fornecida.
+4. Para cada pergunta de apuração do cenário, selecionar o subesquema e gerar SQL em paralelo com Gemini e Llama.
+   Uma nova tentativa recebe a consulta anterior e o tipo de erro, sem mensagens internas do banco.
+5. Verificar SELECT, EXPLAIN, execução, limites, normalização e consenso. Guardar todas as chamadas e
+   seus custos; cada família fornece apenas um candidato final ao consenso.
+6. Substituir o marcador `«VALOR_APURADO»` por `«A<id>»` quando houver referência. A interface resolve o valor
+   sem alterar a evidência original. Sem acordo, há pendência para conferência manual.
+7. Conferir, corrigir valores, registrar execução manual dos testes e, opcionalmente, publicar no Jira.
+
+A tela permite adicionar consultas manuais ou pedir uma nova apuração automática antes da revisão.
+Apuração em andamento impede revisão concorrente. Mudanças na revisão preservam versões anteriores
+e as correções; a referência do consenso nunca é sobrescrita pelo valor validado pelo analista.
+Lotes processam até 20 tarefas distintas em sequência, preservando falhas individuais e histórico.
+
+## API principal
+
+| Método | Caminho | Operação |
+|---|---|---|
+| GET | `/api/saude` | Saúde local |
+| GET | `/api/configuracao` | Indicadores de configuração, sem segredos e sem validar contas remotas |
+| GET / POST | `/api/execucoes` | Histórico / geração pelo Jira |
+| POST | `/api/execucoes/manuais` | Criar execução sem Jira ou IA |
+| GET | `/api/execucoes/{id}` | Cenários, apurações, custos e revisão |
+| POST | `/api/execucoes/{id}/apuracoes` | Consultas finais informadas manualmente |
+| POST | `/api/execucoes/{id}/apuracoes/automaticas` | Gerar SQL e apurar com Gemini/Llama |
+| POST | `/api/execucoes/{id}/revisao` | Conferência e correções por ID de apuração |
+| GET | `/api/execucoes/{id}/revisoes` | Histórico imutável das conferências |
+| PUT | `/api/execucoes/{id}/cenarios/{cenarioId}/execucao` | Registrar teste manual ou desfazer com null |
+| GET | `/api/demandas/{chave}` | Metadados atuais no Jira |
+| PUT | `/api/demandas/{chave}/status` | Transição configurada no Jira |
+| POST | `/api/execucoes/{id}/jira` | Publicar cenários aprovados como comentário |
+| GET / POST | `/api/lotes` | Listar / processar conjunto de referência |
+| GET | `/api/lotes/{id}` | Resultados individuais do lote |
+| GET | `/api/metricas?origem=TODAS` | Métricas; também aceita MANUAL ou MODELOS |
+| GET | `/api/metricas.csv`, `/api/execucoes.csv` | Exportações CSV |
+| GET | `/api/execucoes/{id}/apuracoes.csv` | Evidências e candidatos da execução |
+| GET / POST | `/api/conversas`, `/api/conversas/mensagens` | Histórico / pedido de geração |
+| GET | `/api/conversas/{id}` | Mensagens e execuções associadas |
+
+Catálogo e consultas têm os contratos descritos em [PostgreSQL](docs/postgresql.md).
+CSV inclui BOM UTF-8, separador ponto e vírgula, escape de campos e proteção de células textuais
+interpretáveis como fórmulas. A métrica de alterações usa referências efetivamente revisadas.
+É possível separar apurações manuais das geradas para não tratar custo manual zero como custo de IA.
+
+## Auditoria e limites
+
+Flyway V1–V7 preserva os registros existentes e acrescenta histórico de correções, documentação,
+origem manual/Jira, finalidade das chamadas, lotes e publicações.
+Todas as respostas recebidas dos modelos são auditadas antes da validação, incluindo retentativas.
+As métricas de candidatos agregam os custos das tentativas, separados da geração de cenários.
+
+A publicação é idempotente por execução/revisão. Uma operação sem confirmação fica INCERTO e não é
+reenviada automaticamente: confira a tarefa no Jira. Revisão não muda enquanto há publicação pendente.
+Operações interrompidas pela aplicação ficam registradas para não aparentarem conclusão.
+
+O filtro de saída cobre padrões de CPF, CNPJ, e-mail, telefone e termos configurados, no requisito,
+documentação, regras e mensagens reenviadas. Ele não identifica qualquer informação confidencial
+automaticamente. A base local contém os originais e o mapa de correspondências.
+Resultados completos das consultas não são enviados aos modelos; amostras só saem quando explicitamente
+autorizadas pela lista de colunas e por `ERP_AMOSTRA_ENVIAR_MODELOS=true`.
+
+Cada candidato lê um snapshot próprio no PostgreSQL. Mudanças nos dados durante a apuração podem gerar
+divergência. Consenso não comprova a regra de negócio e não substitui a conferência.
+A execução dos testes do ERP continua manual; a plataforma não escreve no banco consultado.
+
+## Verificação
+
+A CI constrói a interface em modo HTTP, inclui os arquivos no JAR e executa testes com PostgreSQL
+descartável 16 e 18. Testes HTTP simulados cobrem Jira, Confluence, Gemini e Groq sem usar credenciais.
+Os testes do fluxo cobrem geração, retentativas, apuração, correções, auditoria, concorrência, lote,
+publicação idempotente e CSV. Veja [continuidade](../docs/CONTINUIDADE.md) para o que foi realmente
+executado nesta sessão e os bloqueios de ambiente. Implementado não significa validado na sua conta real.
+
+Referências dos contratos: [Gemini](https://ai.google.dev/api/generate-content),
+[Groq](https://console.groq.com/docs/api-reference),
+[Jira](https://developer.atlassian.com/cloud/jira/platform/rest/v3/),
+[Confluence](https://developer.atlassian.com/cloud/confluence/rest/v2/api-group-page/).

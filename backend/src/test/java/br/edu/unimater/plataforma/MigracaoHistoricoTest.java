@@ -37,6 +37,16 @@ class MigracaoHistoricoTest {
                     rs.next();
                     assertThat(rs.getInt(1)).isEqualTo(1);
                 }
+                for (String migracao : java.util.List.of("V3__apuracao_consenso.sql", "V4__correcoes_revisao.sql",
+                        "V5__contexto_e_auditoria_sql.sql", "V6__origem_requisito.sql", "V7__lotes_e_publicacoes.sql"))
+                    ScriptUtils.executeSqlScript(conn, new ClassPathResource("db/migration/" + migracao));
+                for (String tabela : java.util.List.of("revisao", "historico_revisao")) {
+                    try (var rs = stmt.executeQuery("SELECT decisao,valores_corrigidos_json FROM " + tabela)) {
+                        assertThat(rs.next()).isTrue();
+                        assertThat(rs.getString("decisao")).isEqualTo("ACEITO");
+                        assertThat(rs.getString("valores_corrigidos_json")).isEqualTo("{}");
+                    }
+                }
             }
         }
     }

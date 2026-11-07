@@ -19,8 +19,8 @@ como referência quando ao menos dois resultados coincidem. A conferência do an
 1. O analista informa a chave da tarefa do Jira na interface (pelo assistente).
 2. A plataforma busca o requisito da tarefa e, se pedido, a documentação da rotina no Confluence.
 3. O **Módulo 1** gera os cenários de teste em Gherkin e valida a sintaxe.
-4. Para cada valor que o cenário precisa conferir, o **Módulo 2** pede a consulta SQL a três modelos
-   (Claude, Gemini e Llama), cada um de forma independente.
+4. Para cada valor que o cenário precisa conferir, o **Módulo 2** pede consultas SQL independentes.
+   Gemini e Llama/Groq estão implementados; Claude permanece pendente para completar as três famílias planejadas.
 5. As consultas passam por um verificador e são executadas no PostgreSQL de homologação, só leitura, com limite
    de tempo e de linhas.
 6. Se pelo menos dois dos três resultados coincidirem, o valor vira a referência do cenário; se não, o
@@ -72,12 +72,23 @@ npx @mermaid-js/mermaid-cli -i docs/diagramas/arquitetura.mmd -o docs/diagramas/
 
 ## Como executar
 
-O frontend pode usar dados simulados ou o backend com histórico e revisão persistidos.
-Estamos estruturando o backend primeiro; a integração com Claude fica para o final e está desativada por padrão.
-Para configurar Java 21, credenciais e H2, siga o [guia do backend](backend/README.md).
-A leitura PostgreSQL já está disponível em `POST /api/banco/consultas`, sem depender da IA.
-Normalização e consenso estão implementados como componentes internos. A ligação desses componentes à geração,
-o registro completo das apurações e a integração Confluence continuam pendentes.
+O aplicativo local inclui interface e backend no mesmo JAR. É possível criar execuções e informar consultas
+manualmente sem IA, ou gerar cenários e SQL com Gemini/Llama após configurar as integrações.
+Estão implementados Jira, Confluence, catálogo PostgreSQL, apuração, consenso, correções com histórico,
+lote, exportação CSV e publicação opcional dos cenários aprovados no Jira. Claude permanece pendente.
+Implementação e testes simulados não substituem a validação com as credenciais e regras reais do seu ambiente.
+
+Para construir tudo, use `scripts/build.ps1` no Windows ou `sh scripts/build.sh` em Linux/macOS,
+com Java 21, Maven e Node 22. Veja a alternativa sem scripts e a configuração em [backend/README.md](backend/README.md).
+Depois, inicie de `backend`:
+
+```bash
+java -jar target/plataforma-testes-0.1.0-SNAPSHOT.jar
+```
+
+Abra http://127.0.0.1:8080. Copie `backend/.env.example` para `backend/.env`, sem substituir credenciais existentes.
+O arquivo é importado ao iniciar da pasta `backend`. Sem credenciais, use Execuções → Nova execução → Entrada manual.
+O resumo da última validação está em [docs/CONTINUIDADE.md](docs/CONTINUIDADE.md).
 
 Para executar apenas o protótipo com dados simulados:
 

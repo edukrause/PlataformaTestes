@@ -1,84 +1,106 @@
 # Continuidade do desenvolvimento — 07/11/2026
 
-## Decisões preservadas
+## Pedido atual
 
-- Estruturar o backend primeiro; integrar Claude e demais modelos ao final.
-- O meio de acesso aos modelos ainda não foi decidido; não há integração via terminal.
-- PostgreSQL é a fonte consultada; H2 mantém o histórico local da plataforma.
-- Eduardo autorizou desenvolver e fazer commits por etapa, com push quando houver conexão.
+Eduardo pediu para concluir a plataforma deixando apenas a integração com Claude pendente.
+O foco continua sendo desenvolvimento, não reescrita do texto acadêmico.
+Está autorizado desenvolver, fazer commits por etapa e enviar ao GitHub quando a sessão permitir conexão.
 
-## Repositório e entregas
+## Repositório e commits
 
-Pasta: `C:\Users\eduar\PlataformaTestes`. Branch: `main`.
-Remoto: https://github.com/edukrause/PlataformaTestes
-A sessão começou sem alterações pendentes.
+- Pasta: `C:\Users\eduar\PlataformaTestes`; branch main.
+- Remoto: https://github.com/edukrause/PlataformaTestes
+- A etapa começou sem alterações pendentes.
+- `59d2a8b`: fluxo completo de geração/apuração/revisão, Jira/Confluence, Gemini/Groq, lote e CSV.
+- `6831f67`: interface de operação e aplicativo em JAR único, build e CI.
+- Este resumo, guias e verificação de migração estão em um commit adicional.
+- Os commits anteriores `99ae3c2`, `5ab84fa` e `4d29db8` também são locais.
+- **O push falhou novamente por falta de conexão ao GitHub na porta 443. Nada desta retomada foi enviado.**
+- Último envio confirmado em sessão anterior: `088df0e`. Não confundir implementação local com CI aprovada.
 
-- `99ae3c2`: catálogo PostgreSQL, grafo de FKs, seleção lexical e amostragem autorizada.
-- `5ab84fa`: apurações manuais persistidas, consenso, referência nos cenários, métricas e interface compatível.
-- Este resumo está salvo em um commit adicional de documentação.
-- **O push falhou por falta de conexão ao GitHub na porta 443. As entregas desta retomada estão apenas locais.**
-- A sessão anterior conseguiu subir até `088df0e`.
+## Funcionalidades entregues
 
-## Estado anterior preservado
+- Java 21, Spring Boot 3.5, H2 para histórico e PostgreSQL somente leitura.
+- IA desativada por padrão, com entrada manual pela tela e API; não cria chamadas ou custos fictícios.
+- Clientes Gemini e Llama/Groq com preços configuráveis, tokens, latência, pseudonimização e tratamento de truncamento.
+- Cenários por modelo selecionado, contrato JSON e parser Gherkin, uma regeneração quando inválidos.
+- Leitura Jira via API 2/3, ADF/texto e mapeamento configurável de situações.
+- Leitura Confluence via API 2 ou REST 1, página por tarefa/área, HTML convertido, snapshot com versão/hash/texto.
+- Documentação no contexto; regressão admitida apenas quando documentação foi efetivamente fornecida.
+- Regras de empresa, filial, cancelados e exclusão lógica no contexto; DOMINIO_REGRAS obrigatório na geração SQL.
+- Catálogo PostgreSQL com colunas via INFORMATION_SCHEMA e FKs via pg_catalog, preservando pares compostos e permissões.
+- Seleção lexical de subesquema com expansão limitada por relacionamentos.
+- Amostragem por lista permitida, cache TTL configurável e invalidação explícita.
+- Amostras só são incluídas nos modelos com ERP_AMOSTRA_ENVIAR_MODELOS=true; falso por padrão.
+- Geração SQL paralela Gemini/Llama, uma retentativa e auditoria de todas as chamadas/custos.
+- SELECT verificado por AST, EXPLAIN e execução com timeout/limites, READ ONLY/REPEATABLE READ.
+- Normalização, consenso e persistência atômica de apuração/candidatos. Um voto final por família.
+- Candidatos finais agregam custos/tokens das tentativas; origem MANUAL ou MODELOS explícita.
+- Composição de marcador de referência nos passos e resultado esperado, sem inventar números.
+- Correções do analista separadas do resultado original, histórico e métricas reais de alterações.
+- Revisão impedida durante apuração; publicação pendente impede trocar a revisão.
+- Lote de até 20 chaves distintas, histórico e falhas individuais.
+- CSV de métricas, execuções e candidatos, com escape e proteção contra fórmulas.
+- Métricas filtráveis por origem para separar operação manual e geração por modelos.
+- Escrita opcional no Jira: transição configurada e publicação explícita de cenários aceitos.
+- Publicação idempotente por execução/revisão; resposta incerta não é reenviada automaticamente.
+- Recuperação de execuções, lotes e publicações interrompidos.
+- Interface completa para entrada manual, geração pelo Jira, apuração, conferência/histórico, lote, CSV e publicação.
+- JAR único com React e Spring Boot, rotas da SPA e scripts de build Windows/POSIX.
 
-Java 21, Spring Boot 3.5, JDBC, H2 e Flyway. Geração de cenários, leitura Jira, histórico,
-revisão e histórico de decisões, conversas e registro manual dos testes.
-IA desativada por padrão (`PLATAFORMA_IA_MODO=desativada`); adaptador Claude preservado.
-SELECT validado por AST, EXPLAIN e execução PostgreSQL somente leitura com timeout e limites.
-Normalização, SHA-256 e consenso com um voto final por provedor.
+## O que permanece pendente
 
-## Implementado nesta retomada
+- **Integração e homologação do Claude**, conforme pedido. Adaptador legado preservado, sem nova integração ou teste real.
+- Credenciais, URLs, IDs de modelo, preços e regras reais do ambiente precisam ser configurados pelo responsável.
+- As conexões reais Jira, Confluence, Gemini e Groq não foram homologadas nesta sessão; os testes usam HTTP simulado.
+- Os 8 testes PostgreSQL reais ficaram ignorados, sem banco descartável disponível.
+- A CI PostgreSQL 16/18 e o upload do executável só poderão ser conferidos após o push.
+- Incorporação de alterações de código (B33) continua evolução futura fora do MVP.
+- Entregas acadêmicas/diagramas E1–E5 ainda representam o planejamento original com MySQL/três provedores.
 
-- `GET /api/banco/catalogo`: tabelas, colunas, tipos, nulabilidade e relacionamentos visíveis.
-- Colunas via INFORMATION_SCHEMA; FKs via pg_catalog para funcionar com conta que só possui SELECT.
-- Pares de FKs compostas preservados; colunas sem acesso excluídas.
-- `POST /api/banco/subesquema`: termos do requisito sem acentos/caixa e expansão limitada por FKs.
-- `POST /api/banco/amostras`: somente colunas de `ERP_AMOSTRA_COLUNAS`, vazio por padrão.
-- Configurações de schemas, profundidade, tabelas e amostras em `backend/.env.example`.
-- `POST /api/execucoes/{id}/apuracoes`: recebe de uma a três consultas finais de provedores distintos,
-  verifica, executa, normaliza e salva consenso e candidatos atomicamente no H2.
-- Migração V3: origem manual, resultados, descartes, hashes e duração.
-- O provedor é declarado pelo analista; a origem não é autenticada. Modelo `INFORMADO_MANUALMENTE`,
-  origem `MANUAL`, tokens e custos zero. O endpoint não chama modelos.
-- Referência no resultado esperado por marcador `«A<id>»`; sem acordo, aviso para conferência manual.
-- Histórico, detalhe e métricas usam as apurações salvas. Consulta isolada não conta como apuração.
-- Cenário deve pertencer à execução. Apuração bloqueada após revisão, inclusive concorrente.
-- Interface identifica origem manual e aceita booleanos e descartes por limite.
+Com duas famílias automáticas, acordo dos dois é MAIORIA. UNANIME continua exigindo três votos.
+Não afirmar que a plataforma foi homologada em produção ou que a conexão do usuário já está configurada.
 
-## Validação desta sessão
+## Verificação efetivamente realizada
 
-- Código e testes compilados com Java 21, por JavaCompiler com `-source 21 -target 21`.
-- Maven padrão com `--release 21` falhou ao fechar recursos por AccessDeniedException.
-  Foi usado um driver temporário em `backend/target/CompileCheck.java`, sem mudar o pom.
-  Classes principais também foram empacotadas em JAR temporário para resolver o classpath restrito.
-- Maven Surefire (`-Dtest=*Test surefire:test`): **78 testes, zero falhas/erros, 8 ignorados**.
-  Portanto, **70 testes passaram**; os 8 PostgreSQL reais foram ignorados por falta de banco descartável.
-- O teste novo de catálogo com conta SELECT, FKs compostas, permissões e amostras foi escrito e
-  compilado, mas NÃO executado. A inicialização do PostgreSQL temporário falhou por permissões.
-- Nenhum banco pessoal foi usado. O workflow existente executa PostgreSQL 16/18 após o push.
-- Testes de API com gateways substitutos confirmaram persistência, maioria, descarte de escrita/vazio,
-  referência, métricas e bloqueio após revisão. Migração V3 aplicada em H2 em memória.
-- Frontend: `npm.cmd run lint` e `npm.cmd run build` passaram. `git diff --check` passou.
-- Não afirmar que `mvn verify` completo ou a CI passaram nesta retomada.
+- Código principal e testes compilados com Java 21 por JavaCompiler (-source 21 -target 21).
+- Suíte Maven Surefire: **96 testes, zero falhas/erros, 8 ignorados = 88 executados com sucesso**.
+- Depois, o teste de migração foi ampliado e executado isoladamente: preserva revisão existente de V2 até V7,
+  incluindo decisão e mapas de correção vazios, sem alterar a revisão anterior.
+- Testes cobrem contratos HTTP Jira/Confluence/Gemini/Groq, privacidade, tokens/custo, retentativas, SQL rejeitado,
+  consenso, correções/histórico, lote, publicação idempotente/incerta, concorrência e CSV.
+- Frontend: npm.cmd run lint sem avisos e npm.cmd run build passaram em modo HTTP.
+- Recursos, jar:jar e spring-boot:repackage concluídos pelo Maven.
+- JAR iniciado em porta 18081 com H2 em memória, IA desativada, PostgreSQL e escrita Jira desativados.
+- HTTP real local: saúde UP; /nova devolveu HTML 200; execução manual criada com origem MANUAL;
+  cenário persistido, conferência aceita e CSV 200.
+- O servidor temporário foi encerrado. Nenhum banco pessoal foi alterado e nenhum comentário real foi enviado.
+- O JAR foi reempacotado com o último build da interface após esse teste de inicialização.
+- git diff --check passou.
 
-## Limites e próximos passos
+## Limitação do ambiente de compilação
 
-1. Enviar os commits quando a rede permitir e validar a CI PostgreSQL 16/18.
-2. B26: corrigir valores na revisão, preservar histórico e calcular a métrica de alterações (ainda zero).
-3. B20/B21/B24: Confluence, documentação funcional e restrições de domínio.
-4. B28/B29 e B01: lote, exportação de métricas e empacotamento único.
-5. Ao final, escolher acesso aos modelos e implementar geração SQL e retentativas com o catálogo.
+O Maven padrão com --release 21 falha nesta sessão restrita ao fechar recursos do compilador (AccessDeniedException).
+Para validar sem alterar o pom, foram usados backend/target/CompileCheck.java e um JAR temporário com as classes
+principais no classpath. Recursos foram copiados pelo Maven, os testes rodaram pelo Surefire e o JAR final
+foi montado pelos plugins Maven. Esses auxiliares e o cache em target são ignorados pelo Git.
+Não afirmar que mvn clean verify completo passou localmente; os scripts/CI fazem esse fluxo fora da restrição.
 
-Não há geração automática de SQL. A geração de cenários retorna 503 com IA desativada;
-os testes usam substitutos dos gateways. Apuração manual exige execução concluída e ainda não revisada.
-O marcador fica no resultado esperado; o Gherkin original não é reescrito automaticamente.
-Cada consulta e coleta do catálogo usa transação PostgreSQL própria, sem snapshot compartilhado.
-Dados ou DDL alterados durante a coleta podem gerar divergência. Não há cache.
-Consenso não valida a regra de negócio nem garante cobertura de todos os valores do cenário.
-A interface publicada continua sendo protótipo; no modo HTTP usa backend local. Novas apurações entram pela API.
-As entregas acadêmicas E1–E5 ainda preservam o planejamento original com MySQL.
+A tentativa anterior de initdb também falhou por permissões/token restrito. Não usar banco pessoal para contornar isso.
 
-Consultar `docs/backlog.md`, `backend/README.md` e `backend/docs/postgresql.md`.
+## Executar e configurar
+
+- JAR: `backend/target/plataforma-testes-0.1.0-SNAPSHOT.jar`.
+- Iniciar de backend: `java -jar target/plataforma-testes-0.1.0-SNAPSHOT.jar`.
+- Interface: http://127.0.0.1:8080 → Execuções → Nova execução → Entrada manual.
+- Configuração: copiar backend/.env.example para backend/.env, sem substituir um arquivo já configurado.
+- PLATAFORMA_IA_MODO=externa e provedor GEMINI ou LLAMA para gerar com credenciais.
+- Para consenso SQL, habilitar os dois, configurar o PostgreSQL e DOMINIO_REGRAS.
+- Escrita Jira fica desativada por padrão e só é feita por ação explícita na tela/API.
+- Scripts de build: scripts/build.ps1 e scripts/build.sh. Há alternativa sem scripts no guia do backend.
+
 Java: `C:\Users\eduar\.jdks\openjdk-21.0.2`.
 Maven: `C:\Users\eduar\.m2\wrapper\dists\apache-maven-3.9.14-bin\1cb7fhup6b5n3bed6kckbrnspv\apache-maven-3.9.14\bin\mvn.cmd`.
 PostgreSQL: `C:\Program Files\PostgreSQL\18\bin`.
+
+Consultar backend/README.md, backend/docs/postgresql.md e docs/backlog.md.
