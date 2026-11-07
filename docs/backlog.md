@@ -6,6 +6,9 @@ Ordem = prioridade. Estimativas em horas; nenhum item passa de 8 h.
 Atualização de desenvolvimento: a integração com Claude foi adiada para a etapa final.
 `Implementado` indica código existente; a validação com serviços reais continua pendente.
 O backend inicia com IA desativada e seus testes substituem os provedores externos.
+PostgreSQL substitui o MySQL como fonte de homologação. H2 continua sendo a base local da plataforma.
+Leitura, verificação de SQL, normalização e consenso já têm implementação e testes próprios;
+a integração desses componentes ao fluxo completo de apuração continua pendente.
 
 | ID | Item | h | Prioridade | Marco | FV | Status |
 |---|---|---:|---|---|:-:|---|
@@ -14,17 +17,17 @@ O backend inicia com IA desativada e seus testes substituem os provedores extern
 | B03 | Base local H2 com migração das seis tabelas da plataforma | 3 | MVP | E6 | ● | implementado, com tabelas de auditoria e conversas |
 | B04 | Cliente do Jira: obter o requisito pela chave da tarefa | 3 | MVP | E6 | ● | implementado; validar no Jira real |
 | B05 | Gateway de modelos com adaptador do Claude e registro de tokens, custo e latência | 4 | MVP | E6 | ● | adiado; porta e adaptador da API preservados |
-| B06 | Conexão MySQL somente leitura com limite de tempo e de linhas | 2 | MVP | E6 | ● | a fazer |
-| B07 | Verificador, camada 1: análise sintática que admite apenas SELECT | 3 | MVP | E6 | ● | a fazer |
+| B06 | Conexão PostgreSQL somente leitura com limite de tempo e de linhas | 2 | MVP | E6 | ● | implementado e testado em PostgreSQL real |
+| B07 | Verificador, camada 1: análise sintática que admite apenas SELECT | 3 | MVP | E6 | ● | implementado; AST, CTEs, funções permitidas e bloqueio de escrita |
 | B08 | Geração de cenário Gherkin a partir do requisito (um modelo) | 4 | MVP | E6 | ● | parcial; fluxo implementado, integração de IA adiada |
 | B09 | Geração de SQL por um modelo, com o esquema da área informado integralmente | 4 | MVP | E6 | ● | a fazer |
 | B10 | Compositor: cenário com valor preenchido e consulta anexada | 2 | MVP | E6 | ● | a fazer |
 | B11 | Tela: informar a tarefa e visualizar o resultado | 4 | MVP | E6 | ● | parcial; interface ligada à API, sem apuração |
 | B12 | Adaptadores do Gemini e do Llama (Groq) no gateway | 4 | MVP | E7 |  | a fazer |
 | B13 | Geração paralela pelos três modelos e nova tentativa com a mensagem de erro | 6 | MVP | E7 |  | a fazer |
-| B14 | Verificador, camadas 2 e 3: EXPLAIN e execução; descarte de erro e de vazio | 4 | MVP | E7 |  | a fazer |
-| B15 | Normalizador: ordenação, arredondamento, nulos e datas | 6 | MVP | E7 |  | a fazer |
-| B16 | Motor de consenso e classificação do desfecho | 4 | MVP | E7 |  | a fazer |
+| B14 | Verificador, camadas 2 e 3: EXPLAIN e execução; descarte de erro e de vazio | 4 | MVP | E7 |  | implementado; integrar ao registro das apurações |
+| B15 | Normalizador: ordenação, arredondamento, nulos e datas | 6 | MVP | E7 |  | implementado e testado como componente interno |
+| B16 | Motor de consenso e classificação do desfecho | 4 | MVP | E7 |  | implementado e testado; integração ao fluxo pendente |
 | B17 | Extração do esquema pelo INFORMATION_SCHEMA e grafo de chaves estrangeiras | 6 | MVP | E7 |  | a fazer |
 | B18 | Amostrador de valores restrito à lista de colunas permitidas | 5 | MVP | E7 |  | a fazer |
 | B19 | Filtro de saída no gateway: pseudonimização de dados pessoais no requisito, na documentação e nas mensagens de erro | 5 | MVP | E7 |  | parcial; requisito coberto por padrões e termos configurados |
@@ -49,8 +52,8 @@ As horas acima são as estimativas originais, não uma estimativa do esforço re
 
 Próxima sequência de implementação:
 
-1. B06, B07, B09 e B10: estrutura da apuração, leitura MySQL e verificação de consultas.
-2. B14 a B18: execução, normalização, consenso e contexto do banco, testados sem provedores reais.
+1. B17, B18 e B25: catálogo PostgreSQL, relacionamentos, amostragem permitida e seleção de subesquema.
+2. B09 e B10: ligar consultas verificadas, normalização e consenso ao registro e à composição das apurações; usar substitutos dos modelos até a integração final.
 3. B20, B21 e B24: documentação funcional e restrições de domínio.
 4. B28 e B29: lote e exportação das métricas.
 5. Retomar B05, B08 e B12/B13: escolher o meio de acesso aos modelos e validar o fluxo completo.

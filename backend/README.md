@@ -14,6 +14,8 @@ O frontend existente continua compatível com a API; seu modo `mock` permanece s
 - `execucao`: geração, consulta e persistência transacional das execuções.
 - `conversa`: mensagens e encaminhamento de pedidos de geração.
 - `cenario`: contrato e validação sintática dos cenários.
+- `banco`: validação SQL e leitura PostgreSQL em conexão separada, com limites e transação somente leitura.
+- `apuracao`: normalização dos resultados e decisão de consenso entre provedores.
 - `ia`: porta `ModeloGateway`, implementação desativada e adaptador da API guardado como opção.
 - `metrica`: indicadores da avaliação, separados das chamadas de geração.
 
@@ -88,6 +90,7 @@ O campo de área é opcional (`JIRA_AREA_FIELD=customfield_12345`); sem evidênc
 | GET | `/api/conversas` | Histórico de conversas |
 | GET | `/api/conversas/{id}` | Mensagens de uma conversa |
 | POST | `/api/conversas/mensagens` | Pedir geração informando a chave |
+| POST | `/api/banco/consultas` | Validar e executar um SELECT no PostgreSQL, quando habilitado |
 
 O contrato segue `frontend/src/api/tipos.ts`. O detalhe acrescenta `mensagemErro` e
 `apuracaoDisponivel=false`. Não confunda conclusão da geração com execução dos testes ou apuração de valores.
@@ -139,6 +142,8 @@ java -jar target/plataforma-testes-0.1.0-SNAPSHOT.jar
 Os testes usam H2 em memória e substituem Jira e o modelo por doubles, sem consumo de API:
 geração, histórico, revisão, conversa, erros, custo de resposta inválida, validação de entrada,
 Gherkin, pseudonimização, IA desativada, histórico de decisões e migração de revisões existentes.
+O módulo PostgreSQL acrescenta testes de parser, transações, limites, tipos e cancelamento de consultas,
+além dos testes de normalização e consenso. Veja as variáveis do banco descartável em [PostgreSQL](docs/postgresql.md).
 Um teste com credenciais reais ainda é necessário no seu ambiente quando a integração for retomada.
 O workflow `.github/workflows/verifica.yml` executa `mvn verify`, build e lint do frontend em pushes e PRs.
 

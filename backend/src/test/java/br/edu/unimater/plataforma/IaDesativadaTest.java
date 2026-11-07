@@ -16,7 +16,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest(properties = {
         "spring.datasource.url=jdbc:h2:mem:ia-desativada;DB_CLOSE_DELAY=-1",
-        "plataforma.ia.modo=desativada"
+        "plataforma.ia.modo=desativada",
+        "plataforma.postgres.habilitado=false"
 })
 @AutoConfigureMockMvc
 class IaDesativadaTest {
@@ -52,6 +53,19 @@ class IaDesativadaTest {
                 .andExpect(jsonPath("$.mensagens[1].texto").value(
                         org.hamcrest.Matchers.containsString("A geração por IA está desativada")))
                 .andExpect(jsonPath("$.mensagens[1].execucaoId").doesNotExist());
+        verifyNoInteractions(requisitos);
+    }
+
+    @Test void consultaManualExigeAtivacaoMasValidaSintaxeAntes() throws Exception {
+        mvc.perform(post("/api/banco/consultas").contentType("application/json")
+                        .content("{\"consulta\":\"SELECT 1\"}"))
+                .andExpect(status().isServiceUnavailable());
+        mvc.perform(post("/api/banco/consultas").contentType("application/json")
+                        .content("{\"consulta\":\"DELETE FROM public.produto\"}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(post("/api/banco/consultas").contentType("application/json")
+                        .content("{\"consulta\":\"\"}"))
+                .andExpect(status().isBadRequest());
         verifyNoInteractions(requisitos);
     }
 }

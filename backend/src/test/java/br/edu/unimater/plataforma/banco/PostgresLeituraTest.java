@@ -92,6 +92,14 @@ class PostgresLeituraTest {
         assertThat(resultado.mensagemErro()).contains("limite de tempo");
     }
 
+    @Test void flutuantesNaoRecebemEscalaDeInteiro() {
+        var resultado = new ConsultaBancoService(new VerificadorSql(), banco(10, 5, 10000))
+                .consultar("SELECT CAST(12.34 AS double precision) AS valor");
+        assertThat(resultado.verificacao()).isEqualTo(ConsultaBancoGateway.Verificacao.VALIDO);
+        assertThat(resultado.colunas().getFirst().escala()).isEqualTo(-1);
+        assertThat(resultado.linhas().getFirst().getFirst()).isEqualTo(12.34d);
+    }
+
     @Test void recusaSuperusuarioEDesativado() {
         var admin = new PostgresLeituraGateway(new PostgresProperties(true, URL, ADMIN, SENHA, 5, 10, 10000));
         assertThatThrownBy(() -> admin.consultar("SELECT 1")).isInstanceOf(ErroApi.class).hasMessageContaining("superusuário");

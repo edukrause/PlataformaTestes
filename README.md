@@ -21,7 +21,7 @@ como referência quando ao menos dois resultados coincidem. A conferência do an
 3. O **Módulo 1** gera os cenários de teste em Gherkin e valida a sintaxe.
 4. Para cada valor que o cenário precisa conferir, o **Módulo 2** pede a consulta SQL a três modelos
    (Claude, Gemini e Llama), cada um de forma independente.
-5. As consultas passam por um verificador e são executadas no MySQL de homologação, só leitura, com limite
+5. As consultas passam por um verificador e são executadas no PostgreSQL de homologação, só leitura, com limite
    de tempo e de linhas.
 6. Se pelo menos dois dos três resultados coincidirem, o valor vira a referência do cenário; se não, o
    cenário fica marcado como "valor a apurar".
@@ -52,10 +52,12 @@ no navegador: **https://edukrause.github.io/PlataformaTestes/**
   - gateway de modelos com um adaptador por provedor;
   - compositor de saída e registro de execuções.
 - **Base local** (H2 em arquivo) para auditoria e métricas.
-- **MySQL de homologação** acessado só com usuário somente leitura, com limite de tempo e de linhas.
+- **PostgreSQL de homologação** acessado só com usuário somente leitura, com limite de tempo e de linhas.
 
 Os diagramas ficam em [`docs/diagramas`](docs/diagramas). Os arquivos `.mmd` são a fonte, e os `.svg` e `.png`
 são gerados a partir deles.
+Os diagramas e as entregas acadêmicas E1–E5 registram o planejamento original com MySQL;
+a implementação atual usa PostgreSQL, conforme a [documentação do módulo](backend/docs/postgresql.md).
 
 ```bash
 npx @mermaid-js/mermaid-cli -i docs/diagramas/arquitetura.mmd -o docs/diagramas/arquitetura.svg -b white
@@ -73,7 +75,9 @@ npx @mermaid-js/mermaid-cli -i docs/diagramas/arquitetura.mmd -o docs/diagramas/
 O frontend pode usar dados simulados ou o backend com histórico e revisão persistidos.
 Estamos estruturando o backend primeiro; a integração com Claude fica para o final e está desativada por padrão.
 Para configurar Java 21, credenciais e H2, siga o [guia do backend](backend/README.md).
-A apuração SQL, Confluence e o consenso continuam pendentes.
+A leitura PostgreSQL já está disponível em `POST /api/banco/consultas`, sem depender da IA.
+Normalização e consenso estão implementados como componentes internos. A ligação desses componentes à geração,
+o registro completo das apurações e a integração Confluence continuam pendentes.
 
 Para executar apenas o protótipo com dados simulados:
 

@@ -74,7 +74,7 @@ public class PostgresLeituraGateway implements ConsultaBancoGateway {
         var colunas = new ArrayList<Coluna>();
         for (int c = 1; c <= metadata.getColumnCount(); c++)
             colunas.add(new Coluna(metadata.getColumnLabel(c), metadata.getColumnTypeName(c),
-                    metadata.getPrecision(c) == 0 ? -1 : metadata.getScale(c)));
+                    escala(metadata, c)));
         var linhas = new ArrayList<List<Object>>();
         long caracteres = 0;
         while (rs.next()) {
@@ -104,6 +104,15 @@ public class PostgresLeituraGateway implements ConsultaBancoGateway {
                 Object v = rs.getObject(c);
                 yield v == null || v instanceof Number || v instanceof Boolean ? v : v.toString();
             }
+        };
+    }
+
+    private int escala(ResultSetMetaData metadata, int coluna) throws SQLException {
+        return switch (metadata.getColumnType(coluna)) {
+            case Types.NUMERIC, Types.DECIMAL -> metadata.getPrecision(coluna) == 0 ? -1 : metadata.getScale(coluna);
+            case Types.TINYINT, Types.SMALLINT, Types.INTEGER, Types.BIGINT -> 0;
+            // FLOAT/DOUBLE não têm escala decimal fixa; escala zero do driver não significa arredondar para inteiro.
+            default -> -1;
         };
     }
 
