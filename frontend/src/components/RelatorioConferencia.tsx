@@ -84,6 +84,7 @@ function baixarCsv(r: Relatorio, nome: string) {
   const campo = (v: Celula) => {
     if (v === null) return ''
     if (typeof v === 'number') return String(v).replace('.', ',')
+    if (typeof v === 'boolean') return v ? 'verdadeiro' : 'falso'
     return /[;"\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v
   }
   const linhas = [r.colunas, ...r.linhas, ...(r.total ? [r.total] : [])].map((l) => l.map(campo).join(';'))

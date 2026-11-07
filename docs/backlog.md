@@ -8,7 +8,9 @@ Atualização de desenvolvimento: a integração com Claude foi adiada para a et
 O backend inicia com IA desativada e seus testes substituem os provedores externos.
 PostgreSQL substitui o MySQL como fonte de homologação. H2 continua sendo a base local da plataforma.
 Leitura, verificação de SQL, normalização e consenso já têm implementação e testes próprios;
-a integração desses componentes ao fluxo completo de apuração continua pendente.
+eles agora estão ligados a apurações persistidas por consultas informadas manualmente.
+A geração automática de SQL pelos modelos continua pendente. Catálogo, amostragem autorizada e seleção
+de subesquema estão implementados; a validação real do catálogo PostgreSQL está pendente nesta sessão.
 
 | ID | Item | h | Prioridade | Marco | FV | Status |
 |---|---|---:|---|---|:-:|---|
@@ -20,30 +22,30 @@ a integração desses componentes ao fluxo completo de apuração continua pende
 | B06 | Conexão PostgreSQL somente leitura com limite de tempo e de linhas | 2 | MVP | E6 | ● | implementado e testado em PostgreSQL real |
 | B07 | Verificador, camada 1: análise sintática que admite apenas SELECT | 3 | MVP | E6 | ● | implementado; AST, CTEs, funções permitidas e bloqueio de escrita |
 | B08 | Geração de cenário Gherkin a partir do requisito (um modelo) | 4 | MVP | E6 | ● | parcial; fluxo implementado, integração de IA adiada |
-| B09 | Geração de SQL por um modelo, com o esquema da área informado integralmente | 4 | MVP | E6 | ● | a fazer |
-| B10 | Compositor: cenário com valor preenchido e consulta anexada | 2 | MVP | E6 | ● | a fazer |
+| B09 | Geração de SQL por um modelo, com o esquema da área informado integralmente | 4 | MVP | E6 | ● | parcial; catálogo e consultas manuais ligados ao consenso; geração SQL adiada |
+| B10 | Compositor: cenário com valor preenchido e consulta anexada | 2 | MVP | E6 | ● | parcial; marcador no resultado esperado e consultas no detalhe; Gherkin automático pendente |
 | B11 | Tela: informar a tarefa e visualizar o resultado | 4 | MVP | E6 | ● | parcial; interface ligada à API, sem apuração |
 | B12 | Adaptadores do Gemini e do Llama (Groq) no gateway | 4 | MVP | E7 |  | a fazer |
 | B13 | Geração paralela pelos três modelos e nova tentativa com a mensagem de erro | 6 | MVP | E7 |  | a fazer |
-| B14 | Verificador, camadas 2 e 3: EXPLAIN e execução; descarte de erro e de vazio | 4 | MVP | E7 |  | implementado; integrar ao registro das apurações |
+| B14 | Verificador, camadas 2 e 3: EXPLAIN e execução; descarte de erro e de vazio | 4 | MVP | E7 |  | implementado e ligado ao registro das apurações manuais |
 | B15 | Normalizador: ordenação, arredondamento, nulos e datas | 6 | MVP | E7 |  | implementado e testado como componente interno |
-| B16 | Motor de consenso e classificação do desfecho | 4 | MVP | E7 |  | implementado e testado; integração ao fluxo pendente |
-| B17 | Extração do esquema pelo INFORMATION_SCHEMA e grafo de chaves estrangeiras | 6 | MVP | E7 |  | a fazer |
-| B18 | Amostrador de valores restrito à lista de colunas permitidas | 5 | MVP | E7 |  | a fazer |
+| B16 | Motor de consenso e classificação do desfecho | 4 | MVP | E7 |  | implementado e persistido no fluxo manual |
+| B17 | Extração do esquema pelo INFORMATION_SCHEMA e grafo de chaves estrangeiras | 6 | MVP | E7 |  | implementado; FKs via pg_catalog; teste real novo pendente |
+| B18 | Amostrador de valores restrito à lista de colunas permitidas | 5 | MVP | E7 |  | implementado; autorização explícita e limites; teste real novo pendente |
 | B19 | Filtro de saída no gateway: pseudonimização de dados pessoais no requisito, na documentação e nas mensagens de erro | 5 | MVP | E7 |  | parcial; requisito coberto por padrões e termos configurados |
 | B20 | Cliente do Confluence: obter a página da rotina e convertê-la em texto | 6 | MVP | E8 |  | a fazer |
 | B21 | Documentação funcional no prompt, com cenários de regressão | 6 | MVP | E8 |  | a fazer |
 | B22 | Validação com o analisador Gherkin e uma regeneração em caso de erro | 4 | MVP | E8 |  | parcial; parser implementado, regeneração pendente |
 | B23 | Classificador: o requisito exige apuração de valores? | 4 | MVP | E8 |  | parcial; indicação no contrato do modelo, sem módulo de apuração |
 | B24 | Restrições de domínio obrigatórias no prompt (empresa, filial, cancelados, exclusão lógica) | 4 | MVP | E8 |  | a fazer |
-| B25 | Seleção do subesquema por similaridade de termos e expansão pelos relacionamentos | 8 | MVP | TCC II |  | a fazer |
+| B25 | Seleção do subesquema por similaridade de termos e expansão pelos relacionamentos | 8 | MVP | TCC II |  | implementado; correspondência lexical, limite de tabelas e profundidade |
 | B26 | Tela de revisão: aceitar, aceitar com alteração ou rejeitar, com registro de tempo | 6 | MVP | TCC II |  | parcial; decisão, tempo e histórico persistidos; correção de valores pendente |
-| B27 | Exibição do desfecho e da consulta de cada modelo | 4 | MVP | TCC II |  | protótipo; depende da apuração real |
+| B27 | Exibição do desfecho e da consulta de cada modelo | 4 | MVP | TCC II |  | API retorna apurações persistidas no contrato da interface; entrada manual pela API |
 | B28 | Execução em lote sobre o conjunto de referência | 6 | MVP | TCC II |  | a fazer |
 | B29 | Exportação das métricas em CSV | 3 | MVP | TCC II |  | a fazer |
 | B30 | Registro dos cenários aprovados de volta na tarefa do Jira | 6 | Desejável | — |  | a fazer |
 | B31 | Cache do esquema e das amostras entre execuções | 4 | Desejável | — |  | a fazer |
-| B32 | Painel de custos por provedor | 4 | Desejável | — |  | protótipo; apurações ainda zeradas |
+| B32 | Painel de custos por provedor | 4 | Desejável | — |  | parcial; API calcula contagens e métricas das apurações; candidatos manuais têm custo zero |
 | B33 | Incorporação das alterações de código vinculadas à tarefa | 8 | Desejável | Futuro |  | a fazer |
 
 Fatia vertical: 34 h · MVP: 125 h · Desejáveis: 22 h
@@ -52,8 +54,8 @@ As horas acima são as estimativas originais, não uma estimativa do esforço re
 
 Próxima sequência de implementação:
 
-1. B17, B18 e B25: catálogo PostgreSQL, relacionamentos, amostragem permitida e seleção de subesquema.
-2. B09 e B10: ligar consultas verificadas, normalização e consenso ao registro e à composição das apurações; usar substitutos dos modelos até a integração final.
+1. Validar o novo teste de catálogo, FKs compostas e amostras em PostgreSQL descartável (16/18 na CI).
+2. B26: correção de valores na revisão e métricas de alterações. O fluxo manual de apuração já está persistido e testado com substitutos.
 3. B20, B21 e B24: documentação funcional e restrições de domínio.
 4. B28 e B29: lote e exportação das métricas.
 5. Retomar B05, B08 e B12/B13: escolher o meio de acesso aos modelos e validar o fluxo completo.

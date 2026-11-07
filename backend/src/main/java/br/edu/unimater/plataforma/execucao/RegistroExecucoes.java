@@ -3,6 +3,9 @@ package br.edu.unimater.plataforma.execucao;
 import br.edu.unimater.plataforma.api.Contratos.*;
 import br.edu.unimater.plataforma.api.ErroApi;
 import br.edu.unimater.plataforma.cenario.GeradorCenarios;
+import br.edu.unimater.plataforma.apuracao.*;
+import br.edu.unimater.plataforma.banco.CatalogoService;
+import br.edu.unimater.plataforma.banco.ConsultaBancoGateway;
 import br.edu.unimater.plataforma.ia.ModeloGateway;
 import br.edu.unimater.plataforma.contexto.RequisitoGateway.Requisito;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -69,7 +72,7 @@ public class RegistroExecucoes {
                                 rs.getString("requisito"), rs.getString("documentacao_ref"), Instant.parse(rs.getString("coletada_em"))),
                         rs.getString("versao_prompt"), rs.getString("status"), rs.getString("etapa"), rs.getBoolean("exige_apuracao"),
                         rs.getLong("tempo_total_ms"), rs.getBigDecimal("custo_total_usd"), Instant.parse(rs.getString("iniciada_em")),
-                        cenarios(id), List.of(), pontos(rs.getString("pontos_atencao_json")), revisao(id), rs.getString("mensagem_erro"), false), id);
+                        cenarios(id), apuracoes(id), pontos(rs.getString("pontos_atencao_json")), revisao(id), rs.getString("mensagem_erro"), !apuracoes(id).isEmpty()), id);
         if (execucoes.isEmpty()) throw ErroApi.naoEncontrado();
         return execucoes.getFirst();
     }
@@ -78,6 +81,79 @@ public class RegistroExecucoes {
     }
     public Demanda demandaSalva(long id) {
         return ler(db.queryForObject("SELECT t.demanda_json FROM tarefa t JOIN execucao e ON e.tarefa_id=t.id WHERE e.id=?", String.class, id), Demanda.class);
+    }
+
+    @Transactional
+    public long salvarApuracao(long execucaoId, ApuracaoService.Pedido pedido, CatalogoService.Catalogo esquema,
+            List<ApuracaoService.Avaliado> candidatos, MotorConsenso.Decisao decisao, long tempoMs) {
+        bloquear(execucaoId);
+        var execucao = obter(execucaoId);
+        if (!execucao.status().equals("CONCLUIDA") || execucao.revisao() != null)
+            throw ErroApi.entrada("Não é possível alterar apurações de uma execução em andamento ou já revisada.");
+        if (pedido.cenarioId() != null && execucao.cenarios().stream().noneMatch(c -> c.id() == pedido.cenarioId()))
+            throw ErroApi.entrada("O cenário não pertence à execução.");
+        long id = inserir("""
+                INSERT INTO apuracao(execucao_id,cenario_id,pergunta,subesquema,desfecho,resultado_referencia,preservar_ordem,tempo_total_ms,origem)
+                VALUES(?,?,?,?,?,?,?,?,'MANUAL')
+                """, execucaoId, pedido.cenarioId(), pedido.pergunta(), json(esquema), decisao.desfecho().name(),
+                decisao.resultadoReferencia() == null ? null : json(decisao.resultadoReferencia()), pedido.preservarOrdem(), tempoMs);
+        for (var c : candidatos) inserir("""
+                INSERT INTO candidato_sql(apuracao_id,provedor,modelo,tentativa,consulta,verificacao,hash_resultado,
+                tokens_entrada,tokens_saida,custo_usd,latencia_ms,resultado_json,mensagem_erro)
+                VALUES(?,?,'INFORMADO_MANUALMENTE',1,?,?,?,0,0,0,?,?,?)
+                """, id, c.provedor().name(), c.consulta(), c.resultado().verificacao().name(), decisao.hashes().get(c.provedor()),
+                c.resultado().latenciaMs(), json(c.resultado()), decisao.descartes().get(c.provedor()));
+        // Marcadores explícitos associam o valor ao passo correto, sem inventar substituições de texto.
+        // A interface já resolve «A<id>» usando a tabela de referência.
+        if (pedido.cenarioId() != null) {
+            String resultado = decisao.resultadoReferencia() == null
+                    ? "\nApuração A" + id + ": " + decisao.desfecho() + "; conferir manualmente."
+                    : "\nValor de referência apurado: «A" + id + "».";
+            db.update("UPDATE cenario SET resultado_esperado=resultado_esperado || ? WHERE id=? AND execucao_id=?", resultado, pedido.cenarioId(), execucaoId);
+        }
+        db.update("UPDATE execucao SET exige_apuracao=TRUE WHERE id=?", execucaoId);
+        var avisos = new ArrayList<>(execucao.pontosAtencao());
+        avisos.removeIf(p -> p.tipo().equals("MASSA") && p.texto().startsWith("Apuração SQL pendente:"));
+        if (avisos.stream().noneMatch(p -> p.tipo().equals("MASSA") && p.texto().startsWith("Consultas informadas manualmente")))
+            avisos.add(new PontoAtencao("MASSA", "Consultas informadas manualmente; a origem nos provedores não foi autenticada. Consenso exige conferência da regra de negócio e não garante cobertura de todos os valores do cenário."));
+        db.update("UPDATE execucao SET pontos_atencao_json=? WHERE id=?", json(avisos), execucaoId);
+        return id;
+    }
+
+    private List<com.fasterxml.jackson.databind.JsonNode> apuracoes(long execucaoId) {
+        return db.query("SELECT * FROM apuracao WHERE execucao_id=? ORDER BY id", (r, n) -> {
+            var node = mapper.createObjectNode();
+            long id = r.getLong("id");
+            node.put("id", id);
+            if (r.getObject("cenario_id") == null) node.putNull("cenarioId"); else node.put("cenarioId", r.getLong("cenario_id"));
+            node.put("pergunta", r.getString("pergunta")); node.put("desfecho", r.getString("desfecho"));
+            node.put("origem", r.getString("origem")); node.put("tempoTotalMs", r.getLong("tempo_total_ms"));
+            node.put("preservarOrdem", r.getBoolean("preservar_ordem"));
+            var esquema = ler(r.getString("subesquema"), CatalogoService.Catalogo.class);
+            node.set("subesquema", mapper.valueToTree(esquema.tabelas().stream().map(CatalogoService.Tabela::chave).toList()));
+            node.set("catalogo", mapper.valueToTree(esquema));
+            node.set("resultadoReferencia", tabela(ler(r.getString("resultado_referencia"), ConsultaBancoGateway.Resultado.class)));
+            node.set("candidatos", mapper.valueToTree(db.query("SELECT * FROM candidato_sql WHERE apuracao_id=? ORDER BY id", (c, i) -> {
+                var candidato = mapper.createObjectNode();
+                candidato.put("id", c.getLong("id")); candidato.put("provedor", c.getString("provedor"));
+                candidato.put("modelo", c.getString("modelo")); candidato.put("tentativa", c.getInt("tentativa"));
+                candidato.put("consulta", c.getString("consulta")); candidato.put("verificacao", c.getString("verificacao"));
+                candidato.put("hashResultado", c.getString("hash_resultado")); candidato.put("mensagemErro", c.getString("mensagem_erro"));
+                candidato.put("tokensEntrada", c.getInt("tokens_entrada")); candidato.put("tokensSaida", c.getInt("tokens_saida"));
+                candidato.put("custoUsd", c.getBigDecimal("custo_usd")); candidato.put("latenciaMs", c.getLong("latencia_ms"));
+                candidato.set("resultado", tabela(ler(c.getString("resultado_json"), ConsultaBancoGateway.Resultado.class)));
+                return candidato;
+            }, id)));
+            return (com.fasterxml.jackson.databind.JsonNode) node;
+        }, execucaoId);
+    }
+
+    private com.fasterxml.jackson.databind.JsonNode tabela(ConsultaBancoGateway.Resultado resultado) {
+        if (resultado == null || resultado.verificacao() != ConsultaBancoGateway.Verificacao.VALIDO) return mapper.nullNode();
+        var node = mapper.createObjectNode();
+        node.set("colunas", mapper.valueToTree(resultado.colunas().stream().map(ConsultaBancoGateway.Coluna::nome).toList()));
+        node.set("linhas", mapper.valueToTree(resultado.linhas()));
+        return node;
     }
     private List<Cenario> cenarios(long id) {
         return db.query("SELECT * FROM cenario WHERE execucao_id=? ORDER BY id", (r, n) -> new Cenario(r.getLong("id"),

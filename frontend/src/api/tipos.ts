@@ -31,9 +31,9 @@ export type Etapa = 'COLETA' | 'CENARIOS' | 'APURACAO' | 'COMPOSICAO'
 export type TipoCenario = 'ALTERACAO' | 'REGRESSAO'
 
 /** Resultado da verificação em camadas de um candidato. */
-export type Verificacao = 'VALIDO' | 'REJEITADO_SINTAXE' | 'ERRO_EXPLAIN' | 'ERRO_EXECUCAO' | 'VAZIO'
+export type Verificacao = 'VALIDO' | 'REJEITADO_SINTAXE' | 'ERRO_EXPLAIN' | 'ERRO_EXECUCAO' | 'VAZIO' | 'LIMITE_EXCEDIDO'
 
-export type Celula = string | number | null
+export type Celula = string | number | boolean | null
 
 /** Conjunto de resultado já normalizado. */
 export interface Tabela {
@@ -111,6 +111,7 @@ export interface RelatorioConferencia {
 
 export interface Apuracao {
   id: number
+  origem?: 'MANUAL'
   cenarioId: number | null
   pergunta: string
   subesquema: string[]

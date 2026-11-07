@@ -14,8 +14,8 @@ O frontend existente continua compatível com a API; seu modo `mock` permanece s
 - `execucao`: geração, consulta e persistência transacional das execuções.
 - `conversa`: mensagens e encaminhamento de pedidos de geração.
 - `cenario`: contrato e validação sintática dos cenários.
-- `banco`: validação SQL e leitura PostgreSQL em conexão separada, com limites e transação somente leitura.
-- `apuracao`: normalização dos resultados e decisão de consenso entre provedores.
+- `banco`: validação SQL, leitura PostgreSQL, catálogo, relacionamentos e amostragem permitida.
+- `apuracao`: execução dos candidatos informados manualmente, normalização e consenso persistido.
 - `ia`: porta `ModeloGateway`, implementação desativada e adaptador da API guardado como opção.
 - `metrica`: indicadores da avaliação, separados das chamadas de geração.
 
@@ -91,9 +91,14 @@ O campo de área é opcional (`JIRA_AREA_FIELD=customfield_12345`); sem evidênc
 | GET | `/api/conversas/{id}` | Mensagens de uma conversa |
 | POST | `/api/conversas/mensagens` | Pedir geração informando a chave |
 | POST | `/api/banco/consultas` | Validar e executar um SELECT no PostgreSQL, quando habilitado |
+| GET | `/api/banco/catalogo` | Catálogo dos schemas configurados e relacionamentos visíveis |
+| POST | `/api/banco/subesquema` | Seleção por termos e expansão pelas chaves estrangeiras |
+| POST | `/api/banco/amostras` | Valores distintos de uma coluna explicitamente permitida |
+| POST | `/api/execucoes/{id}/apuracoes` | Verificar consultas manuais e salvar consenso, referência e candidatos |
 
 O contrato segue `frontend/src/api/tipos.ts`. O detalhe acrescenta `mensagemErro` e
-`apuracaoDisponivel=false`. Não confunda conclusão da geração com execução dos testes ou apuração de valores.
+`apuracaoDisponivel` indica se já existe alguma apuração registrada. Não confunda conclusão da geração
+com execução dos testes ou validação dos valores pelo analista.
 Metadados na listagem são o retrato coletado; o endpoint de demanda faz uma nova leitura do Jira.
 A conversa reconhece chaves e orienta o usuário; ainda não é um chat livre com o modelo.
 
@@ -120,8 +125,10 @@ mantenha-a sob o controle de acesso da empresa. Nenhum resultado de banco é env
 PostgreSQL substitui o MySQL como fonte de homologação. O módulo de leitura já valida SELECT, verifica o plano
 e executa consultas com limites em transação somente leitura, independentemente da IA.
 Veja [configuração, endpoint e testes](docs/postgresql.md).
-Normalização e motor de consenso já existem como componentes internos e têm testes independentes de IA.
-Confluence, geração SQL pelos modelos, integração/persistência das apurações e exportação ainda estão pendentes.
+Catálogo, seleção do subesquema e amostras autorizadas estão implementados. Normalização e consenso
+estão ligados ao registro das apurações e à composição do resultado esperado com marcador de referência.
+O novo endpoint recebe consultas informadas manualmente; ele não gera SQL nem autentica a origem dos modelos.
+Confluence, geração SQL pelos modelos, correção de valores na revisão e exportação ainda estão pendentes.
 `usarDocumentacao` é recebido por compatibilidade com o frontend, mas esta versão sempre registra a ausência
 de documentação e gera apenas cenários de alteração. Alterar situação ou publicar cenários no Jira não está
 habilitado; a tentativa de alteração de situação retorna 501.
@@ -144,6 +151,8 @@ geração, histórico, revisão, conversa, erros, custo de resposta inválida, v
 Gherkin, pseudonimização, IA desativada, histórico de decisões e migração de revisões existentes.
 O módulo PostgreSQL acrescenta testes de parser, transações, limites, tipos e cancelamento de consultas,
 além dos testes de normalização e consenso. Veja as variáveis do banco descartável em [PostgreSQL](docs/postgresql.md).
+Os testes novos cobrem seleção por relacionamentos, amostragem autorizada, catálogo incompleto, persistência
+dos candidatos, composição, métricas, descarte de escrita e bloqueio de apurações após revisão.
 Um teste com credenciais reais ainda é necessário no seu ambiente quando a integração for retomada.
 O workflow `.github/workflows/verifica.yml` executa `mvn verify`, build e lint do frontend em pushes e PRs.
 

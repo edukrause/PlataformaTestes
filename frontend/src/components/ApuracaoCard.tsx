@@ -19,6 +19,9 @@ export function ApuracaoCard({ apuracao, cenarioTitulo }: { apuracao: Apuracao; 
             {cenarioTitulo && <span>· cenário “{cenarioTitulo}”</span>}
           </div>
           <h3 className="mt-1 font-medium text-enfase">{apuracao.pergunta}</h3>
+          {apuracao.origem === 'MANUAL' && (
+            <p className="mt-1 text-xs text-texto-sec">Consultas informadas manualmente; a origem nos provedores foi declarada pelo analista.</p>
+          )}
           <div className="mt-3 flex flex-wrap gap-1.5">
             {apuracao.subesquema.map((t) => (
               <span key={t} className="rounded bg-neutro-2 px-1.5 py-0.5 font-mono text-xs text-texto">{t}</span>
@@ -55,7 +58,7 @@ export function ApuracaoCard({ apuracao, cenarioTitulo }: { apuracao: Apuracao; 
 export function ModelosApuracao({ apuracao }: { apuracao: Apuracao }) {
   const hashes = [...new Set(apuracao.candidatos.map((c) => c.hashResultado).filter(Boolean))] as string[]
   const hashRef = apuracao.candidatos.find(
-    (c) => apuracao.resultadoReferencia && c.verificacao === 'VALIDO' &&
+    (c) => apuracao.resultadoReferencia && c.verificacao === 'VALIDO' && c.hashResultado &&
       apuracao.candidatos.filter((o) => o.hashResultado === c.hashResultado).length >= 2,
   )?.hashResultado
 
@@ -87,7 +90,7 @@ function Candidato({ c, corGrupo, concorda }: { c: CandidatoSql; corGrupo: strin
       <div className="flex items-start justify-between gap-2">
         <div>
           <div className="font-medium text-enfase">{ROTULO_PROVEDOR[c.provedor]}</div>
-          <div className="font-mono text-xs text-texto-sec">{c.modelo}</div>
+          <div className="font-mono text-xs text-texto-sec">{c.modelo === 'INFORMADO_MANUALMENTE' ? 'Consulta informada manualmente' : c.modelo}</div>
         </div>
         <span
           className={`rounded px-1.5 py-0.5 text-xs font-medium ${

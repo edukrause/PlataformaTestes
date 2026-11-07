@@ -8,10 +8,10 @@ export const ROTULO_DESFECHO: Record<Desfecho, string> = {
 }
 
 export const DESCRICAO_DESFECHO: Record<Desfecho, string> = {
-  UNANIME: 'Três candidatos válidos com o mesmo resultado. Confiança alta.',
-  MAIORIA: 'Dois resultados coincidentes; o terceiro diverge ou foi descartado. Confiança moderada.',
+  UNANIME: 'Três resultados válidos coincidentes. Confira a regra de negócio.',
+  MAIORIA: 'Dois resultados válidos coincidentes. Confira a regra de negócio.',
   DIVERGENTE: 'Candidatos válidos sem resultados coincidentes. Sem valor de referência: apure pelas consultas.',
-  FALHA: 'Menos de dois candidatos válidos após a nova tentativa. Sem valor de referência.',
+  FALHA: 'Menos de dois resultados válidos para comparação. Sem valor de referência.',
 }
 
 export const ROTULO_DECISAO: Record<Decisao, string> = {
@@ -54,6 +54,7 @@ export const ROTULO_VERIFICACAO: Record<Verificacao, string> = {
   ERRO_EXPLAIN: 'Erro no EXPLAIN',
   ERRO_EXECUCAO: 'Erro na execução',
   VAZIO: 'Retorno vazio',
+  LIMITE_EXCEDIDO: 'Resultado descartado por exceder os limites',
 }
 
 const fmtInteiro = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 })
@@ -62,6 +63,7 @@ const fmtDataHora = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeS
 
 export function celula(v: Celula): string {
   if (v === null) return '∅'
+  if (typeof v === 'boolean') return v ? 'verdadeiro' : 'falso'
   if (typeof v === 'number') return (Number.isInteger(v) ? fmtInteiro : fmtDecimal).format(v)
   return v
 }
