@@ -1,0 +1,37 @@
+server:
+  address: 127.0.0.1
+  port: ${PORT:8080}
+  error:
+    include-message: never
+    include-stacktrace: never
+spring:
+  application:
+    name: plataforma-testes
+  datasource:
+    url: ${PLATAFORMA_DB_URL:jdbc:h2:file:./data/plataforma}
+    username: sa
+    password: ${PLATAFORMA_DB_PASSWORD:}
+  flyway:
+    enabled: true
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+plataforma:
+  jira:
+    base-url: ${JIRA_BASE_URL:}
+    email: ${JIRA_EMAIL:}
+    token: ${JIRA_API_TOKEN:}
+    api-version: ${JIRA_API_VERSION:3}
+    auth-mode: ${JIRA_AUTH_MODE:basic}
+    # Campo customizado opcional que identifica a área. Sem ele, o classificador usa o requisito.
+    area-field: ${JIRA_AREA_FIELD:}
+  claude:
+    api-key: ${ANTHROPIC_API_KEY:}
+    model: ${ANTHROPIC_MODEL:}
+    max-tokens: ${ANTHROPIC_MAX_TOKENS:4096}
+    # Preços da versão escolhida, em USD por milhão de tokens. Não presumir preço zero.
+    input-price: ${ANTHROPIC_INPUT_PRICE:}
+    output-price: ${ANTHROPIC_OUTPUT_PRICE:}
+  privacy:
+    # Nomes conhecidos separados por ;. O filtro por padrões não identifica nomes arbitrários.
+    sensitive-terms: ${SENSITIVE_TERMS:}

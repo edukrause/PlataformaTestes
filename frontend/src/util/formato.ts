@@ -38,6 +38,7 @@ export const ROTULO_PROVEDOR: Record<Provedor, string> = {
 export const ROTULO_AREA: Record<Area, string> = {
   ESTOQUE: 'Estoque',
   VENDAS: 'Vendas',
+  NAO_IDENTIFICADA: 'Área a confirmar',
 }
 
 export const ROTULO_ETAPA: Record<Etapa, string> = {

@@ -111,7 +111,9 @@ export function ExecucaoDetalhe() {
       <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_18rem]">
         <div className="min-w-0 space-y-6">
 
-          {!concluida && (
+          {exec.status === 'ERRO' && <Erro mensagem={exec.mensagemErro ?? 'A geração não foi concluída.'} />}
+
+          {exec.status === 'EM_ANDAMENTO' && (
             <Painel>
               <ProgressoExecucao etapa={exec.etapa} />
             </Painel>
@@ -138,7 +140,16 @@ export function ExecucaoDetalhe() {
             </Card>
           </Painel>
 
-          {concluida && exec.exigeApuracao && (
+          {concluida && exec.apuracaoDisponivel === false && (
+            <Painel>
+              <Card className="px-5 py-4 text-sm text-texto">
+                A apuração no banco ainda não está disponível. Os cenários foram gerados a partir do requisito;
+                confirme os resultados esperados antes de executar os testes.
+              </Card>
+            </Painel>
+          )}
+
+          {concluida && exec.exigeApuracao && exec.apuracaoDisponivel !== false && (
             <section>
               <h2 className="mb-1 text-lg font-bold text-enfase">
                 Apurações <span className="font-normal text-texto-sec">{exec.apuracoes.length}</span>
@@ -154,7 +165,7 @@ export function ExecucaoDetalhe() {
             </section>
           )}
 
-          {concluida && !exec.exigeApuracao && (
+          {concluida && !exec.exigeApuracao && exec.apuracaoDisponivel !== false && (
             <Painel>
               <Card className="px-5 py-4 text-sm text-texto">
                 O classificador concluiu que este requisito não envolve relatório ou consulta. Não houve apuração de valores no banco.

@@ -9,6 +9,8 @@ dist/
 *.trace.db
 # Credenciais — nunca versionar
 .env
+.env.local
+.env.*.local
 application-local.yml
 # IDE
 .idea/

@@ -70,7 +70,11 @@ npx @mermaid-js/mermaid-cli -i docs/diagramas/arquitetura.mmd -o docs/diagramas/
 
 ## Como executar
 
-Por enquanto só existe o protótipo da interface, que roda com dados simulados:
+O frontend pode usar dados simulados ou a primeira integração do backend com Jira e Claude.
+Para configurar Java 21, credenciais e H2, siga o [guia do backend](backend/README.md).
+A apuração SQL, Confluence e o consenso continuam pendentes.
+
+Para executar apenas o protótipo com dados simulados:
 
 ```bash
 cd frontend
@@ -78,8 +82,8 @@ npm install
 npm run dev
 ```
 
-Detalhes em [`frontend/README.md`](frontend/README.md). As instruções completas entram aqui junto com o
-esqueleto (item B01 do backlog).
+Detalhes da interface em [`frontend/README.md`](frontend/README.md). Para conectar ao Spring Boot,
+configure `VITE_API=http` em `frontend/.env.local` e execute ambos os processos localmente.
 
 ## Segurança
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { api, type Etapa, type Execucao, type Mensagem } from '../api'
+import { api, modoApi, type Etapa, type Execucao, type Mensagem } from '../api'
 import { dataHora, ROTULO_ETAPA, usd, valorNoGherkin } from '../util/formato'
 import { CasoTeste } from './CasoTeste'
 import type { Valores } from './GherkinView'
@@ -294,8 +294,8 @@ export function Compositor({
       </div>
       <div className="mt-2 flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-texto-sec">
         <label className="flex items-center gap-1.5">
-          <input type="checkbox" checked={usarDoc} onChange={(e) => onUsarDoc(e.target.checked)} className="accent-(--primary)" />
-          Usar a documentação da rotina (Confluence)
+          <input type="checkbox" checked={usarDoc} disabled={modoApi === 'http'} onChange={(e) => onUsarDoc(e.target.checked)} className="accent-(--primary)" />
+          {modoApi === 'http' ? 'Documentação da rotina: em breve' : 'Usar a documentação da rotina (Confluence)'}
         </label>
         <span>Os valores só valem depois da conferência do analista.</span>
       </div>

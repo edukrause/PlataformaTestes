@@ -7,8 +7,14 @@ async function chamar<T>(caminho: string, init?: RequestInit): Promise<T> {
   })
   if (!resp.ok) {
     const texto = await resp.text()
-    throw new Error(texto || `Erro ${resp.status} em ${caminho}`)
+    let mensagem = texto || `Erro ${resp.status} em ${caminho}`
+    try {
+      const problema = JSON.parse(texto) as { detail?: string }
+      if (problema.detail) mensagem = problema.detail
+    } catch { /* O servidor também pode responder em texto simples. */ }
+    throw new Error(mensagem)
   }
+  if (resp.status === 204) return undefined as T
   return resp.json() as Promise<T>
 }
 

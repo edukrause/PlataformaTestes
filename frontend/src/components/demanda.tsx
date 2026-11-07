@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { api, type Demanda, type StatusDemanda } from '../api'
+import { api, modoApi, type Demanda, type StatusDemanda } from '../api'
 import { data, diasAte, ROTULO_STATUS_DEMANDA } from '../util/formato'
 
 const ORDEM: StatusDemanda[] = ['A_FAZER', 'EM_DESENVOLVIMENTO', 'AGUARDANDO_TESTE', 'EM_TESTE', 'REPROVADA', 'FINALIZADA']
@@ -53,10 +53,10 @@ export function StatusDemandaMenu({ demanda, onAlterada }: { demanda: Demanda; o
       <button
         type="button"
         onClick={() => setAberto((a) => !a)}
-        disabled={salvando}
+        disabled={salvando || modoApi === 'http'}
         aria-haspopup="listbox"
         aria-expanded={aberto}
-        title="Mudar a situação da demanda"
+        title={modoApi === 'http' ? 'Situação consultada no Jira' : 'Mudar a situação da demanda'}
         className={`inline-flex items-center gap-1.5 rounded px-2.5 py-1.5 text-xs leading-none font-bold whitespace-nowrap hover:brightness-95 disabled:opacity-60 ${cor.selo}`}
       >
         <span className={`size-1.5 rounded-full ${cor.ponto} ${salvando ? 'animate-pulse' : ''}`} />

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useOutletContext, useParams } from 'react-router-dom'
-import { api, type Conversa } from '../api'
+import { api, modoApi, type Conversa } from '../api'
 import { BalaoAssistente, BalaoUsuario, Compositor, Digitando, IconeIA } from '../components/chat'
 import type { ContextoLayout } from '../components/Layout'
 import { Carregando, Erro } from '../components/ui'
@@ -22,7 +22,7 @@ export function Assistente() {
   const [pendente, setPendente] = useState<{ texto: string; enviadaEm: string } | null>(null)
   const [animarId, setAnimarId] = useState<number | null>(null)
   const [versao, setVersao] = useState(0)
-  const [usarDoc, setUsarDoc] = useState(true)
+  const [usarDoc, setUsarDoc] = useState(modoApi === 'mock')
   const fim = useRef<HTMLDivElement>(null)
 
   // Carrega a conversa da rota, a não ser que ela tenha acabado de chegar pelo envio.
@@ -123,8 +123,9 @@ function BoasVindas({ onEscolher }: { onEscolher: (texto: string) => void }) {
       </span>
       <h1 className="mt-4 text-2xl font-bold text-enfase">Olá! Qual tarefa vamos testar?</h1>
       <p className="mt-2 max-w-xl text-texto">
-        Me passe a chave de uma tarefa do Jira. Eu leio o requisito e a documentação da rotina, escrevo os cenários em
-        Gherkin e apuro os valores esperados no banco de homologação. Depois a gente conversa sobre o resultado.
+        {modoApi === 'http'
+          ? 'Me passe a chave de uma tarefa do Jira para gerar os cenários em Gherkin. Nesta primeira versão, uso o requisito; a documentação e a apuração no banco ainda estão pendentes.'
+          : 'Me passe a chave de uma tarefa do Jira. Eu leio o requisito e a documentação da rotina, escrevo os cenários em Gherkin e apuro os valores esperados no banco de homologação. Depois a gente conversa sobre o resultado.'}
       </p>
       <div className="mt-6 flex flex-wrap gap-2">
         {SUGESTOES.map((s) => (

@@ -1,7 +1,7 @@
 // Tipos trocados entre a interface e a camada de orquestração.
 // Seguem as entidades do DER (docs/diagramas/der.mmd), em camelCase, como o Spring serializa por padrão.
 
-export type Area = 'ESTOQUE' | 'VENDAS'
+export type Area = 'ESTOQUE' | 'VENDAS' | 'NAO_IDENTIFICADA'
 
 export type Provedor = 'CLAUDE' | 'GEMINI' | 'LLAMA'
 
@@ -154,6 +154,9 @@ export interface Execucao {
   apuracoes: Apuracao[]
   pontosAtencao: PontoAtencao[]
   revisao: Revisao | null
+  /** Disponibilidade real do módulo 2; ausente nos exemplos antigos. */
+  apuracaoDisponivel?: boolean
+  mensagemErro?: string | null
 }
 
 /** Linha da listagem de execuções. */
