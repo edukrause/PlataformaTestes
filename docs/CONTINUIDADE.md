@@ -1,91 +1,84 @@
 # Continuidade do desenvolvimento — 07/11/2026
 
-Resumo da conversa e do estado do projeto para retomar na próxima sessão.
+## Decisões preservadas
 
-## Pedido e decisões do Eduardo
+- Estruturar o backend primeiro; integrar Claude e demais modelos ao final.
+- O meio de acesso aos modelos ainda não foi decidido; não há integração via terminal.
+- PostgreSQL é a fonte consultada; H2 mantém o histórico local da plataforma.
+- Eduardo autorizou desenvolver e fazer commits por etapa, com push quando houver conexão.
 
-- O foco é o desenvolvimento da plataforma do TCC, não a revisão do texto acadêmico.
-- Estruturar o backend primeiro; deixar a integração com Claude para a etapa final.
-- O meio de acesso ao Claude ainda não foi decidido. Terminal/Claude Code foi discutido, mas não implementado.
-- PostgreSQL substitui MySQL como fonte de dados consultada. O histórico local permanece em H2.
-- Eduardo autorizou desenvolver, fazer commits por etapa e subir ao GitHub sem pedir confirmação a cada alteração.
-- Se surgir uma dúvida que realmente dependa dele, perguntar; decisões rotineiras podem seguir autonomamente.
+## Repositório e entregas
 
-## Repositório
+Pasta: `C:\Users\eduar\PlataformaTestes`. Branch: `main`.
+Remoto: https://github.com/edukrause/PlataformaTestes
+A sessão começou sem alterações pendentes.
 
-- Pasta: `C:\Users\eduar\PlataformaTestes`.
-- Remoto: https://github.com/edukrause/PlataformaTestes
-- Branch: `main`.
-- Último commit de implementação desta sessão: `5835961d3da1bd83927c60abc36edb821e00a80c`.
-- Os commits foram enviados e o HEAD remoto foi conferido. Antes deste resumo, a árvore de trabalho estava limpa.
-- A restrição de rede da sessão foi removida; o push HTTPS funcionou normalmente. Não é necessário trocar o remoto para SSH.
+- `99ae3c2`: catálogo PostgreSQL, grafo de FKs, seleção lexical e amostragem autorizada.
+- `5ab84fa`: apurações manuais persistidas, consenso, referência nos cenários, métricas e interface compatível.
+- Este resumo está salvo em um commit adicional de documentação.
+- **O push falhou por falta de conexão ao GitHub na porta 443. As entregas desta retomada estão apenas locais.**
+- A sessão anterior conseguiu subir até `088df0e`.
 
-## Implementado
+## Estado anterior preservado
 
-- Java 21, Spring Boot 3.5, JDBC, H2 e migrações Flyway.
-- API de histórico, detalhe, conversa, revisão e registro manual da execução dos testes.
-- Histórico das decisões de revisão, com migração V2 que preserva revisões existentes.
-- Separação dos serviços de geração, consultas, conversas e métricas.
-- Portas `RequisitoGateway` e `ModeloGateway`; adaptador de leitura do Jira.
-- Adaptador da API Claude preservado, mas IA desativada por padrão (`PLATAFORMA_IA_MODO=desativada`).
-- PostgreSQL em conexão separada do H2, ativada explicitamente pelas variáveis `ERP_POSTGRES_*`.
-- Parser JSQLParser: um SELECT, bloqueio de escrita/CTEs de escrita/SELECT INTO/locks e funções fora da lista.
-- Leitura PostgreSQL em transação READ ONLY/REPEATABLE READ, EXPLAIN sem ANALYZE, timeout, limites de linhas e caracteres.
-- Conta superusuária recusada; resultados truncados são descartados integralmente.
-- Endpoint independente da IA: `POST /api/banco/consultas`, corpo `{"consulta":"SELECT ..."}`.
-- `NormalizadorResultados`: aliases, ordem de colunas/linhas, escala decimal, nulos, datas e instantes UTC.
-- A normalização preserva duplicatas e a relação entre células. Ambiguidades excessivas são descartadas, sem hash aproximado.
-- `MotorConsenso`: UNANIME, MAIORIA, DIVERGENTE e FALHA; apenas um voto final por provedor.
-- Workflow GitHub Actions com PostgreSQL 16 e 18, além de build/lint do frontend.
+Java 21, Spring Boot 3.5, JDBC, H2 e Flyway. Geração de cenários, leitura Jira, histórico,
+revisão e histórico de decisões, conversas e registro manual dos testes.
+IA desativada por padrão (`PLATAFORMA_IA_MODO=desativada`); adaptador Claude preservado.
+SELECT validado por AST, EXPLAIN e execução PostgreSQL somente leitura com timeout e limites.
+Normalização, SHA-256 e consenso com um voto final por provedor.
 
-## Limite importante do estado atual
+## Implementado nesta retomada
 
-A consulta manual funciona sem IA. Normalização e consenso são componentes internos testados.
-Eles ainda NÃO estão ligados à geração e à persistência completa de `apuracao`/`candidato_sql`.
-Não considerar o fluxo completo de apuração pronto. As métricas de apuração continuam zeradas.
-O frontend publicado é um protótipo com dados simulados; o modo HTTP usa o backend local.
+- `GET /api/banco/catalogo`: tabelas, colunas, tipos, nulabilidade e relacionamentos visíveis.
+- Colunas via INFORMATION_SCHEMA; FKs via pg_catalog para funcionar com conta que só possui SELECT.
+- Pares de FKs compostas preservados; colunas sem acesso excluídas.
+- `POST /api/banco/subesquema`: termos do requisito sem acentos/caixa e expansão limitada por FKs.
+- `POST /api/banco/amostras`: somente colunas de `ERP_AMOSTRA_COLUNAS`, vazio por padrão.
+- Configurações de schemas, profundidade, tabelas e amostras em `backend/.env.example`.
+- `POST /api/execucoes/{id}/apuracoes`: recebe de uma a três consultas finais de provedores distintos,
+  verifica, executa, normaliza e salva consenso e candidatos atomicamente no H2.
+- Migração V3: origem manual, resultados, descartes, hashes e duração.
+- O provedor é declarado pelo analista; a origem não é autenticada. Modelo `INFORMADO_MANUALMENTE`,
+  origem `MANUAL`, tokens e custos zero. O endpoint não chama modelos.
+- Referência no resultado esperado por marcador `«A<id>»`; sem acordo, aviso para conferência manual.
+- Histórico, detalhe e métricas usam as apurações salvas. Consulta isolada não conta como apuração.
+- Cenário deve pertencer à execução. Apuração bloqueada após revisão, inclusive concorrente.
+- Interface identifica origem manual e aceita booleanos e descartes por limite.
 
-## Verificação realizada
+## Validação desta sessão
 
-- Último `mvn verify`: 70 testes, zero falhas, zero erros, zero ignorados; JAR gerado.
-- Testes reais executados em PostgreSQL 18, com fixtures sintéticas numa instância temporária separada.
-- A instância temporária foi encerrada. Não foi alterado o banco pessoal/de homologação do Eduardo.
-- Testes cobrem escrita bloqueada, EXPLAIN, timeout, limites, tipos/nulos, normalização e consenso.
-- Build e lint da interface passaram na etapa anterior; esta etapa não alterou o frontend.
-- CI do primeiro commit PostgreSQL foi observado como bem-sucedido. Não foi confirmado o resultado do último push.
+- Código e testes compilados com Java 21, por JavaCompiler com `-source 21 -target 21`.
+- Maven padrão com `--release 21` falhou ao fechar recursos por AccessDeniedException.
+  Foi usado um driver temporário em `backend/target/CompileCheck.java`, sem mudar o pom.
+  Classes principais também foram empacotadas em JAR temporário para resolver o classpath restrito.
+- Maven Surefire (`-Dtest=*Test surefire:test`): **78 testes, zero falhas/erros, 8 ignorados**.
+  Portanto, **70 testes passaram**; os 8 PostgreSQL reais foram ignorados por falta de banco descartável.
+- O teste novo de catálogo com conta SELECT, FKs compostas, permissões e amostras foi escrito e
+  compilado, mas NÃO executado. A inicialização do PostgreSQL temporário falhou por permissões.
+- Nenhum banco pessoal foi usado. O workflow existente executa PostgreSQL 16/18 após o push.
+- Testes de API com gateways substitutos confirmaram persistência, maioria, descarte de escrita/vazio,
+  referência, métricas e bloqueio após revisão. Migração V3 aplicada em H2 em memória.
+- Frontend: `npm.cmd run lint` e `npm.cmd run build` passaram. `git diff --check` passou.
+- Não afirmar que `mvn verify` completo ou a CI passaram nesta retomada.
 
-Java e Maven estão instalados fora do PATH habitual:
+## Limites e próximos passos
 
-```powershell
-$env:JAVA_HOME = 'C:\Users\eduar\.jdks\openjdk-21.0.2'
-$env:Path = "$env:JAVA_HOME\bin;$env:Path"
-cd C:\Users\eduar\PlataformaTestes\backend
-& 'C:\Users\eduar\.m2\wrapper\dists\apache-maven-3.9.14-bin\1cb7fhup6b5n3bed6kckbrnspv\apache-maven-3.9.14\bin\mvn.cmd' '-Dmaven.repo.local=C:\Users\eduar\.m2\repository' -B -ntp verify
-```
+1. Enviar os commits quando a rede permitir e validar a CI PostgreSQL 16/18.
+2. B26: corrigir valores na revisão, preservar histórico e calcular a métrica de alterações (ainda zero).
+3. B20/B21/B24: Confluence, documentação funcional e restrições de domínio.
+4. B28/B29 e B01: lote, exportação de métricas e empacotamento único.
+5. Ao final, escolher acesso aos modelos e implementar geração SQL e retentativas com o catálogo.
 
-Sem `PLATAFORMA_TEST_PG_URL`, os testes reais PostgreSQL são ignorados. Para incluí-los, usar um banco
-descartável e as variáveis de teste descritas em `backend/docs/postgresql.md`; não apontar para homologação.
-O PostgreSQL 18 está instalado em `C:\Program Files\PostgreSQL\18\bin`.
+Não há geração automática de SQL. A geração de cenários retorna 503 com IA desativada;
+os testes usam substitutos dos gateways. Apuração manual exige execução concluída e ainda não revisada.
+O marcador fica no resultado esperado; o Gherkin original não é reescrito automaticamente.
+Cada consulta e coleta do catálogo usa transação PostgreSQL própria, sem snapshot compartilhado.
+Dados ou DDL alterados durante a coleta podem gerar divergência. Não há cache.
+Consenso não valida a regra de negócio nem garante cobertura de todos os valores do cenário.
+A interface publicada continua sendo protótipo; no modo HTTP usa backend local. Novas apurações entram pela API.
+As entregas acadêmicas E1–E5 ainda preservam o planejamento original com MySQL.
 
-## Próximos passos
-
-1. Conferir `git status`, eventuais mudanças do Eduardo e a CI mais recente.
-2. B17/B18/B25: extrair catálogo PostgreSQL, relacionamentos, amostragem permitida e seleção de subesquema.
-3. B09/B10: integrar consultas verificadas, normalização e consenso ao registro/composição das apurações.
-   Testar com substitutos dos modelos enquanto a integração de IA estiver adiada.
-4. Completar revisão com correção de valores e métricas reais das apurações.
-5. Confluence, execução em lote, exportação CSV e empacotamento único.
-6. Ao final, decidir e integrar o acesso aos modelos e validar o fluxo completo com serviços reais.
-
-Consultar `docs/backlog.md`, `backend/README.md` e `backend/docs/postgresql.md` para detalhes e pendências.
-As entregas acadêmicas E1–E5 e seus diagramas preservam o planejamento original com MySQL; ainda não foram reescritas.
-
-## Commits desta conversa
-
-- `aeda5e7` — Salva backend inicial e conexao da interface com a API.
-- `3e104d8` — Separa casos de uso do backend e adia integracao de IA.
-- `8cf694e` — Preserva historico das decisoes de revisao com migracao de dados.
-- `b320adf` — Adiciona verificacao automatica e atualiza plano de desenvolvimento.
-- `8568997` — Implementa leitura PostgreSQL com validacao SQL e testes reais.
-- `3b02b74` — Implementa normalizacao de resultados e consenso entre provedores.
-- `5835961` — Completa testes PostgreSQL e atualiza backlog da apuracao.
+Consultar `docs/backlog.md`, `backend/README.md` e `backend/docs/postgresql.md`.
+Java: `C:\Users\eduar\.jdks\openjdk-21.0.2`.
+Maven: `C:\Users\eduar\.m2\wrapper\dists\apache-maven-3.9.14-bin\1cb7fhup6b5n3bed6kckbrnspv\apache-maven-3.9.14\bin\mvn.cmd`.
+PostgreSQL: `C:\Program Files\PostgreSQL\18\bin`.
