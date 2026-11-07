@@ -61,7 +61,8 @@ npm install
 npm run dev
 ```
 
-Abra o endereço mostrado pelo Vite e envie `Gere os cenários de PROJ-123`, com uma chave real do seu Jira.
+Quando a integração estiver ativada, abra o endereço mostrado pelo Vite e envie
+`Gere os cenários de PROJ-123`, com uma chave real do seu Jira.
 O proxy do Vite encaminha `/api` ao backend. A hospedagem no GitHub Pages continua sendo apenas o protótipo;
 ela não hospeda processos Java. A geração é síncrona e pode levar até dois minutos, além da coleta no Jira.
 Não repita o envio enquanto estiver aguardando.
@@ -131,9 +132,11 @@ mvn package
 java -jar target/plataforma-testes-0.1.0-SNAPSHOT.jar
 ```
 
-Os testes usam H2 em memória e substituem Jira e Claude por doubles, sem consumo de API:
+Os testes usam H2 em memória e substituem Jira e o modelo por doubles, sem consumo de API:
 geração, histórico, revisão, conversa, erros, custo de resposta inválida, validação de entrada,
-Gherkin e pseudonimização. Um teste com credenciais reais ainda é necessário no seu ambiente.
+Gherkin, pseudonimização, IA desativada, histórico de decisões e migração de revisões existentes.
+Um teste com credenciais reais ainda é necessário no seu ambiente quando a integração for retomada.
+O workflow `.github/workflows/verifica.yml` executa `mvn verify`, build e lint do frontend em pushes e PRs.
 
 Referências: [Spring Boot 3.5](https://docs.spring.io/spring-boot/3.5/system-requirements.html),
 [Jira Cloud](https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issues/),
