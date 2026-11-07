@@ -80,6 +80,7 @@ O campo de área é opcional (`JIRA_AREA_FIELD=customfield_12345`); sem evidênc
 | GET / POST | `/api/execucoes` | Histórico / geração pelo requisito |
 | GET | `/api/execucoes/{id}` | Cenários, custo, pendências e erro |
 | POST | `/api/execucoes/{id}/revisao` | Conferência corrente do analista |
+| GET | `/api/execucoes/{id}/revisoes` | Histórico de decisões do analista, da mais antiga à mais recente |
 | PUT | `/api/execucoes/{id}/cenarios/{cenarioId}/execucao` | Resultado manual do teste; `null` desfaz |
 | GET | `/api/demandas/{chave}` | Metadados atuais da tarefa no Jira |
 | GET | `/api/metricas` | Contagens da avaliação; apurações ficam zeradas enquanto não existem |
@@ -116,7 +117,9 @@ Confluence, SQL/MySQL, múltiplos modelos, consenso e exportação de métricas 
 `usarDocumentacao` é recebido por compatibilidade com o frontend, mas esta versão sempre registra a ausência
 de documentação e gera apenas cenários de alteração. Alterar situação ou publicar cenários no Jira não está
 habilitado; a tentativa de alteração de situação retorna 501.
-A revisão guarda a decisão corrente; histórico de alterações de uma revisão fica para uma migração posterior.
+A revisão guarda a decisão corrente e todas as alterações em `historico_revisao`, na mesma transação.
+A migração V2 copia as revisões já existentes para o histórico sem alterar a V1.
+Os IDs do histórico pertencem à trilha de auditoria; a revisão corrente continua no detalhe da execução.
 Build único com frontend e backend ainda está pendente (B01 parcial). Não considere B01–B11 concluídos.
 
 ## Verificação

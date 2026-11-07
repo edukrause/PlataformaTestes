@@ -94,4 +94,38 @@ class FluxoApiTest {
                 .andExpect(status().isNotImplemented());
         mvc.perform(get("/api/execucoes/999999")).andExpect(status().isNotFound());
     }
+
+    @Test void preservaDecisoesAnterioresAoAtualizarRevisao() throws Exception {
+        preparar(GERACAO);
+        long id = gerar();
+        mvc.perform(post("/api/execucoes/{id}/revisao", id).contentType("application/json").content("""
+                {"analista":"A1","decisao":"REJEITADO","valoresCorrigidos":{},"tempoRevisaoS":10,"comentario":"Revisar"}
+                """)).andExpect(status().isOk());
+        mvc.perform(post("/api/execucoes/{id}/revisao", id).contentType("application/json").content("""
+                {"analista":"A2","decisao":"ACEITO","valoresCorrigidos":{},"tempoRevisaoS":20,"comentario":"Conferido"}
+                """)).andExpect(status().isOk());
+        mvc.perform(get("/api/execucoes/{id}", id))
+                .andExpect(jsonPath("$.revisao.analista").value("A2"))
+                .andExpect(jsonPath("$.revisao.decisao").value("ACEITO"));
+        mvc.perform(get("/api/execucoes/{id}/revisoes", id)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].decisao").value("REJEITADO"))
+                .andExpect(jsonPath("$[1].decisao").value("ACEITO"));
+        // A métrica corrente não conta uma mesma execução como aceita e rejeitada.
+        assertThat(db.queryForObject("SELECT COUNT(*) FROM revisao WHERE execucao_id=?", Integer.class, id)).isEqualTo(1);
+    }
+
+    @Test void revisaoInvalidaNaoApagaHistoricoNemDecisaoAtual() throws Exception {
+        preparar(GERACAO);
+        long id = gerar();
+        mvc.perform(post("/api/execucoes/{id}/revisao", id).contentType("application/json").content("""
+                {"analista":"A1","decisao":"ACEITO","valoresCorrigidos":{},"tempoRevisaoS":10,"comentario":"Conferido"}
+                """)).andExpect(status().isOk());
+        mvc.perform(post("/api/execucoes/{id}/revisao", id).contentType("application/json").content("""
+                {"analista":"A2","decisao":"REJEITADO","valoresCorrigidos":{"999":"1"},"tempoRevisaoS":20,"comentario":"Inválida"}
+                """)).andExpect(status().isBadRequest());
+        mvc.perform(get("/api/execucoes/{id}", id)).andExpect(jsonPath("$.revisao.decisao").value("ACEITO"));
+        mvc.perform(get("/api/execucoes/{id}/revisoes", id)).andExpect(jsonPath("$.length()").value(1));
+        mvc.perform(get("/api/execucoes/999999/revisoes")).andExpect(status().isNotFound());
+    }
 }

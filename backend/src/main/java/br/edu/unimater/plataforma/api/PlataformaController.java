@@ -31,6 +31,8 @@ public class PlataformaController {
     public Map<String, Long> iniciar(@Valid @RequestBody NovaExecucaoRequest req) { return Map.of("id", service.iniciar(req)); }
     @PostMapping("/execucoes/{id}/revisao")
     public Revisao revisar(@PathVariable long id, @Valid @RequestBody RevisaoRequest req) { return registro.revisar(id, req); }
+    @GetMapping("/execucoes/{id}/revisoes")
+    public List<Revisao> revisoes(@PathVariable long id) { return registro.historicoRevisoes(id); }
     @PutMapping("/execucoes/{id}/cenarios/{cenarioId}/execucao")
     public Map<String, Boolean> teste(@PathVariable long id, @PathVariable long cenarioId,
                                       @Valid @RequestBody(required = false) ExecucaoTeste req) {

@@ -99,7 +99,19 @@ public class RegistroExecucoes {
         db.update("DELETE FROM revisao WHERE execucao_id=?", id);
         inserir("INSERT INTO revisao(execucao_id,analista,decisao,valores_alterados,tempo_revisao_s,comentario,registrada_em) VALUES(?,?,?,0,?,?,?)",
                 id, req.analista(), req.decisao(), req.tempoRevisaoS(), req.comentario(), Instant.now().toString());
+        db.update("""
+                INSERT INTO historico_revisao(execucao_id,analista,decisao,valores_alterados,tempo_revisao_s,comentario,registrada_em)
+                SELECT execucao_id,analista,decisao,valores_alterados,tempo_revisao_s,comentario,registrada_em
+                FROM revisao WHERE execucao_id=?
+                """, id);
         return revisao(id);
+    }
+    public List<Revisao> historicoRevisoes(long id) {
+        if (db.queryForList("SELECT id FROM execucao WHERE id=?", Long.class, id).isEmpty()) throw ErroApi.naoEncontrado();
+        return db.query("SELECT * FROM historico_revisao WHERE execucao_id=? ORDER BY id", (r, n) ->
+                new Revisao(r.getLong("id"), r.getString("analista"), r.getString("decisao"),
+                        r.getInt("valores_alterados"), r.getLong("tempo_revisao_s"), r.getString("comentario"),
+                        Instant.parse(r.getString("registrada_em"))), id);
     }
     @Transactional
     public void registrarTeste(long id, long cenarioId, ExecucaoTeste teste) {
