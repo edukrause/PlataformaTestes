@@ -28,8 +28,12 @@ class PostgresLeituraTest {
             papelCriado = true;
             stmt.execute(sql("CREATE TABLE teste_apuracao.produto(id integer, preco numeric(12, 3), nome text, dia date, instante timestamptz)"));
             stmt.execute(sql("INSERT INTO teste_apuracao.produto VALUES (0,12.345,NULL,'2026-11-06','2026-11-06 15:00:00-03'),(1,1.200,'Produto B',NULL,NULL),(2,3.000,'Produto C',NULL,NULL)"));
+            stmt.execute(sql("CREATE TABLE teste_apuracao.categoria(empresa integer, codigo integer, PRIMARY KEY(empresa,codigo))"));
+            stmt.execute(sql("CREATE TABLE teste_apuracao.item(categoria_codigo integer, empresa integer, FOREIGN KEY(empresa,categoria_codigo) REFERENCES teste_apuracao.categoria(empresa,codigo))"));
+            stmt.execute(sql("CREATE TABLE teste_apuracao.restrita(segredo text)"));
             stmt.execute("GRANT USAGE ON SCHEMA " + SCHEMA + " TO " + PAPEL);
             stmt.execute("GRANT SELECT ON ALL TABLES IN SCHEMA " + SCHEMA + " TO " + PAPEL);
+            stmt.execute(sql("REVOKE SELECT ON teste_apuracao.restrita FROM " + PAPEL));
         }
     }
 
@@ -105,5 +109,20 @@ class PostgresLeituraTest {
         assertThatThrownBy(() -> admin.consultar("SELECT 1")).isInstanceOf(ErroApi.class).hasMessageContaining("superusuário");
         var desativado = new PostgresLeituraGateway(new PostgresProperties(false, "", "", "", 5, 10, 10000));
         assertThatThrownBy(() -> desativado.consultar("SELECT 1")).isInstanceOf(ErroApi.class).hasMessageContaining("desativada");
+    }
+
+    @Test void catalogoRespeitaPermissoesEPreservaParesDeChaveComposta() {
+        var service = new CatalogoService(banco(1000, 5, 100000),
+                new CatalogoProperties(java.util.List.of(SCHEMA), java.util.List.of(SCHEMA + ".produto.nome"), 2, 10, 1));
+        var catalogo = service.obter();
+        assertThat(catalogo.tabelas()).extracting(CatalogoService.Tabela::nome).contains("produto", "categoria", "item").doesNotContain("restrita");
+        assertThat(catalogo.relacionamentos()).containsExactlyInAnyOrder(
+                new CatalogoService.Relacao(SCHEMA + ".item", "empresa", SCHEMA + ".categoria", "empresa"),
+                new CatalogoService.Relacao(SCHEMA + ".item", "categoria_codigo", SCHEMA + ".categoria", "codigo"));
+        assertThat(service.selecionar("item").tabelas()).extracting(CatalogoService.Tabela::nome).containsExactlyInAnyOrder("item", "categoria");
+        var amostra = service.amostrar(SCHEMA, "produto", "nome");
+        assertThat(amostra.verificacao()).isEqualTo(ConsultaBancoGateway.Verificacao.VALIDO);
+        assertThat(amostra.linhas()).hasSize(2).allSatisfy(l -> assertThat(l.getFirst()).isNotNull());
+        assertThatThrownBy(() -> service.amostrar(SCHEMA, "produto", "preco")).isInstanceOf(ErroApi.class);
     }
 }

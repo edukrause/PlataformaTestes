@@ -9,7 +9,20 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/banco")
 public class BancoController {
     private final ConsultaBancoService consultas;
-    public BancoController(ConsultaBancoService consultas) { this.consultas = consultas; }
+    private final CatalogoService catalogo;
+    public BancoController(ConsultaBancoService consultas, CatalogoService catalogo) { this.consultas = consultas; this.catalogo = catalogo; }
+
+    public record SubesquemaRequest(@NotBlank @Size(max = 10000) String requisito) {}
+    public record AmostraRequest(@NotBlank @Size(max = 63) String schema,
+            @NotBlank @Size(max = 63) String tabela, @NotBlank @Size(max = 63) String coluna) {}
+
+    @GetMapping("/catalogo") public CatalogoService.Catalogo catalogo() { return catalogo.obter(); }
+    @PostMapping("/subesquema") public CatalogoService.Catalogo selecionar(@Valid @RequestBody SubesquemaRequest req) {
+        return catalogo.selecionar(req.requisito());
+    }
+    @PostMapping("/amostras") public ConsultaBancoGateway.Resultado amostrar(@Valid @RequestBody AmostraRequest req) {
+        return catalogo.amostrar(req.schema(), req.tabela(), req.coluna());
+    }
 
     public record ConsultaRequest(@NotBlank @Size(max = 20000) String consulta) {}
 

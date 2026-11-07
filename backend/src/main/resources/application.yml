@@ -17,6 +17,12 @@ spring:
     deserialization:
       fail-on-unknown-properties: true
 plataforma:
+  catalogo:
+    schemas: ${ERP_CATALOGO_SCHEMAS:public}
+    colunas-permitidas: ${ERP_AMOSTRA_COLUNAS:}
+    max-amostras: ${ERP_AMOSTRA_MAX_VALORES:5}
+    max-tabelas: ${ERP_CATALOGO_MAX_TABELAS:12}
+    profundidade: ${ERP_CATALOGO_PROFUNDIDADE:1}
   postgres:
     habilitado: ${ERP_POSTGRES_HABILITADO:false}
     url: ${ERP_POSTGRES_URL:}
