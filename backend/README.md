@@ -1,8 +1,24 @@
-# Backend — primeira integração
+# Backend — estrutura e integrações
 
 Java 21, Spring Boot 3.5, Maven, JDBC, Flyway e H2 em arquivo.
-O fluxo desta entrega é **Jira → filtro de saída → Claude → validação Gherkin → histórico e revisão**.
-O frontend existente pode usar todos os endpoints de leitura, geração, conversa e revisão.
+A integração com Claude fica para a etapa final. Por padrão, `PLATAFORMA_IA_MODO=desativada`:
+o processo inicia sem credenciais de IA e permite consultar histórico, métricas e revisar execuções existentes.
+Pedidos de geração retornam HTTP 503 antes de consultar o Jira ou gravar uma execução.
+O frontend existente continua compatível com a API; seu modo `mock` permanece separado do backend.
+
+## Organização
+
+- `api`: contratos HTTP, validação de entrada e respostas de erro.
+- `contexto`: porta de leitura de requisitos (`RequisitoGateway`).
+- `jira`: adaptador HTTP dessa porta.
+- `execucao`: geração, consulta e persistência transacional das execuções.
+- `conversa`: mensagens e encaminhamento de pedidos de geração.
+- `cenario`: contrato e validação sintática dos cenários.
+- `ia`: porta `ModeloGateway`, implementação desativada e adaptador da API guardado como opção.
+- `metrica`: indicadores da avaliação, separados das chamadas de geração.
+
+Os casos de uso dependem das portas, permitindo testar o fluxo com implementações substitutas sem consumir APIs.
+Um futuro adaptador de terminal pode implementar `ModeloGateway` sem alterar persistência ou interface.
 
 ## Executar
 
@@ -11,6 +27,10 @@ ou no ambiente de execução da IDE. Veja os nomes em [.env.example](.env.exampl
 O arquivo `.env` não é carregado automaticamente pelo Spring.
 
 Exemplo PowerShell, preenchendo as credenciais somente no seu terminal:
+
+Para desenvolver a estrutura, basta `mvn spring-boot:run` com Java 21. As configurações abaixo
+só são necessárias quando as respectivas integrações forem usadas. Para retomar o adaptador da API,
+defina explicitamente `PLATAFORMA_IA_MODO=api` e configure o modelo e as credenciais.
 
 ```powershell
 $env:JAVA_HOME = 'CAMINHO_DO_SEU_JDK_21'

@@ -4,7 +4,7 @@ import br.edu.unimater.plataforma.api.Contratos.*;
 import br.edu.unimater.plataforma.api.ErroApi;
 import br.edu.unimater.plataforma.cenario.GeradorCenarios;
 import br.edu.unimater.plataforma.ia.ModeloGateway;
-import br.edu.unimater.plataforma.jira.JiraClient.Requisito;
+import br.edu.unimater.plataforma.contexto.RequisitoGateway.Requisito;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

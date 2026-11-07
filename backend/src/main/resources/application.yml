@@ -17,6 +17,9 @@ spring:
     deserialization:
       fail-on-unknown-properties: true
 plataforma:
+  ia:
+    # Integração com o provedor adiada. api mantém o adaptador existente como opção explícita.
+    modo: ${PLATAFORMA_IA_MODO:desativada}
   jira:
     base-url: ${JIRA_BASE_URL:}
     email: ${JIRA_EMAIL:}

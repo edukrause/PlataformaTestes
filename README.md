@@ -70,7 +70,8 @@ npx @mermaid-js/mermaid-cli -i docs/diagramas/arquitetura.mmd -o docs/diagramas/
 
 ## Como executar
 
-O frontend pode usar dados simulados ou a primeira integração do backend com Jira e Claude.
+O frontend pode usar dados simulados ou o backend com histórico e revisão persistidos.
+Estamos estruturando o backend primeiro; a integração com Claude fica para o final e está desativada por padrão.
 Para configurar Java 21, credenciais e H2, siga o [guia do backend](backend/README.md).
 A apuração SQL, Confluence e o consenso continuam pendentes.
 

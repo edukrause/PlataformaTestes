@@ -37,4 +37,14 @@ public final class Contratos {
             Revisao revisao, String mensagemErro, boolean apuracaoDisponivel) {}
     public record Mensagem(long id, String papel, String texto, Instant enviadaEm, Long execucaoId) {}
     public record Conversa(long id, String titulo, Instant criadaEm, List<Mensagem> mensagens) {}
+    public record ResumoConversa(long id, String titulo, Instant atualizadaEm, String chaveJira) {}
+    public record ResumoExecucao(long id, String chaveJira, String titulo, String area, String status,
+            Instant iniciadaEm, long tempoTotalMs, BigDecimal custoTotalUsd, int qtdCenarios,
+            List<String> desfechos, String decisao, String documentacaoRef, int qtdApuracoes,
+            int qtdComReferencia, Demanda demanda) {}
+    public record MetricaProvedor(String provedor, long candidatos, long validos, BigDecimal custoUsd,
+                                  double latenciaMediaMs) {}
+    public record Metricas(long totalExecucoes, long totalApuracoes, Map<String, Long> desfechos,
+            Map<String, Long> decisoes, double valoresAlteradosPct, BigDecimal custoMedioApuracaoUsd,
+            double tempoMedioApuracaoS, List<MetricaProvedor> porProvedor) {}
 }

@@ -8,12 +8,14 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.*;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.*;
 
 @Component
+@ConditionalOnProperty(name = "plataforma.ia.modo", havingValue = "api")
 public class ClaudeGateway implements ModeloGateway {
     private final RestClient http;
     private final FiltroSaida filtro;

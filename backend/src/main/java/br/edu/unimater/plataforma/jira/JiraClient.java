@@ -2,6 +2,7 @@ package br.edu.unimater.plataforma.jira;
 
 import br.edu.unimater.plataforma.api.Contratos.Demanda;
 import br.edu.unimater.plataforma.api.ErroApi;
+import br.edu.unimater.plataforma.contexto.RequisitoGateway;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -16,7 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.*;
 
 @Component
-public class JiraClient {
+public class JiraClient implements RequisitoGateway {
     private final RestClient http;
     private final String baseUrl, email, token, version, authMode, areaField;
     public JiraClient(@Value("${plataforma.jira.base-url}") String baseUrl,
@@ -31,8 +32,7 @@ public class JiraClient {
         factory.setReadTimeout(Duration.ofSeconds(30));
         this.http = RestClient.builder().requestFactory(factory).build();
     }
-    public record Requisito(String chave, String titulo, String texto, String areaHint, Demanda demanda) {}
-
+    @Override
     public Requisito obter(String chave) {
         chave = chave.toUpperCase(Locale.ROOT);
         if (!chave.matches("[A-Z][A-Z0-9_]*-[1-9][0-9]*")) throw ErroApi.entrada("Chave do Jira inválida.");

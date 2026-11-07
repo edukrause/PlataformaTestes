@@ -3,7 +3,7 @@ package br.edu.unimater.plataforma;
 import br.edu.unimater.plataforma.api.ErroApi;
 import br.edu.unimater.plataforma.api.Contratos.Demanda;
 import br.edu.unimater.plataforma.ia.ModeloGateway;
-import br.edu.unimater.plataforma.jira.JiraClient;
+import br.edu.unimater.plataforma.contexto.RequisitoGateway;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
 import java.util.Map;
@@ -26,7 +26,7 @@ class FluxoApiTest {
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper mapper;
     @Autowired JdbcTemplate db;
-    @MockitoBean JiraClient jira;
+    @MockitoBean RequisitoGateway jira;
     @MockitoBean ModeloGateway modelo;
     private static final String GERACAO = """
             {"area":"ESTOQUE","exigeApuracao":true,"cenarios":[{"tipo":"ALTERACAO",
@@ -35,7 +35,7 @@ class FluxoApiTest {
             """;
 
     private void preparar(String resposta) {
-        when(jira.obter("PROJ-123")).thenReturn(new JiraClient.Requisito("PROJ-123", "Consultar saldo",
+        when(jira.obter("PROJ-123")).thenReturn(new RequisitoGateway.Requisito("PROJ-123", "Consultar saldo",
                 "Consultar saldo do estoque por produto.", "ESTOQUE",
                 new Demanda("PROJ-123", "EM_TESTE", "2026-11-04T12:00:00Z", null, null)));
         when(modelo.gerar(anyString(), anyString())).thenReturn(new ModeloGateway.Resposta(resposta, "modelo-fixado",
