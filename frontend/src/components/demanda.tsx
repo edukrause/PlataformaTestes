@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { api, modoApi, type Demanda, type StatusDemanda } from '../api'
 import { data, diasAte, ROTULO_STATUS_DEMANDA } from '../util/formato'
+import { obterConfiguracao } from '../util/configuracao'
 
 const ORDEM: StatusDemanda[] = ['A_FAZER', 'EM_DESENVOLVIMENTO', 'AGUARDANDO_TESTE', 'EM_TESTE', 'REPROVADA', 'FINALIZADA']
 
@@ -19,6 +20,8 @@ export function StatusDemandaMenu({ demanda, onAlterada }: { demanda: Demanda; o
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
   const raiz = useRef<HTMLDivElement>(null)
+  const [escrita, setEscrita] = useState(modoApi !== 'http')
+  useEffect(() => { if (modoApi === 'http') obterConfiguracao().then((c) => setEscrita(c.jiraEscritaHabilitada)).catch(() => {}) }, [])
 
   // fecha ao clicar fora ou com Esc
   useEffect(() => {
@@ -53,10 +56,10 @@ export function StatusDemandaMenu({ demanda, onAlterada }: { demanda: Demanda; o
       <button
         type="button"
         onClick={() => setAberto((a) => !a)}
-        disabled={salvando || modoApi === 'http'}
+        disabled={salvando || !escrita}
         aria-haspopup="listbox"
         aria-expanded={aberto}
-        title={modoApi === 'http' ? 'Situação consultada no Jira' : 'Mudar a situação da demanda'}
+        title={escrita ? 'Mudar a situação da demanda no Jira' : 'Situação consultada no Jira; escrita desativada'}
         className={`inline-flex items-center gap-1.5 rounded px-2.5 py-1.5 text-xs leading-none font-bold whitespace-nowrap hover:brightness-95 disabled:opacity-60 ${cor.selo}`}
       >
         <span className={`size-1.5 rounded-full ${cor.ponto} ${salvando ? 'animate-pulse' : ''}`} />

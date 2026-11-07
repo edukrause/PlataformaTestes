@@ -3,9 +3,9 @@ name: Verifica backend e frontend
 on:
   push:
     branches: [main]
-    paths: ['backend/**', 'frontend/**', '.github/workflows/verifica.yml']
+    paths: ['backend/**', 'frontend/**', 'scripts/**', '.github/workflows/verifica.yml']
   pull_request:
-    paths: ['backend/**', 'frontend/**', '.github/workflows/verifica.yml']
+    paths: ['backend/**', 'frontend/**', 'scripts/**', '.github/workflows/verifica.yml']
   workflow_dispatch:
 
 permissions:
@@ -46,7 +46,24 @@ jobs:
           java-version: '21'
           cache: maven
           cache-dependency-path: backend/pom.xml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
+        env:
+          VITE_API: http
       - run: mvn -B -ntp verify
+      - uses: actions/upload-artifact@v4
+        if: matrix.postgres == '16'
+        with:
+          name: plataforma-testes-executavel
+          path: backend/target/plataforma-testes-0.1.0-SNAPSHOT.jar
+          if-no-files-found: error
 
   frontend:
     runs-on: ubuntu-latest

@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { api, type Demanda, type Execucao, type ExecucaoTeste, type RevisaoRequest } from '../api'
+import { api, modoApi, type Demanda, type Execucao, type ExecucaoTeste, type RevisaoRequest } from '../api'
 import { ApuracaoCard, ModelosApuracao } from '../components/ApuracaoCard'
 import { CaminhoDocumentacao, Prazo, StatusDemandaMenu } from '../components/demanda'
 import { BotaoCopiarJira, CasosTeste } from '../components/CasoTeste'
 import type { Valores } from '../components/GherkinView'
 import { PontosAtencao } from '../components/PontosAtencao'
 import { PainelRevisao } from '../components/PainelRevisao'
+import { PainelApuracao, PublicarJira } from '../components/Operacoes'
+import { HistoricoRevisoes } from '../components/HistoricoRevisoes'
 import { ProgressoExecucao } from '../components/ProgressoExecucao'
 import { SeloArea, SeloStatus } from '../components/selos'
 import { Card, CardCabecalho, Carregando, Erro, Painel } from '../components/ui'
@@ -46,7 +48,7 @@ export function ExecucaoDetalhe() {
 
   // Enquanto a execução roda, consulta de novo a cada segundo.
   useEffect(() => {
-    if (exec?.status !== 'EM_ANDAMENTO') return
+    if (exec?.status !== 'EM_ANDAMENTO' && !(exec?.status === 'CONCLUIDA' && exec.etapa !== 'COMPOSICAO')) return
     const t = setTimeout(() => setVersao((v) => v + 1), 1000)
     return () => clearTimeout(t)
   }, [exec])
@@ -66,10 +68,10 @@ export function ExecucaoDetalhe() {
 
   const { tarefa } = exec
   const valores: Valores = Object.fromEntries(
-    exec.apuracoes.map((a) => [a.id, a.resultadoReferencia ? valorNoGherkin(a.resultadoReferencia) : null]),
+    exec.apuracoes.map((a) => [a.id, a.valorCorrigido ?? (a.resultadoReferencia ? valorNoGherkin(a.resultadoReferencia) : null)]),
   )
   const titulosCenario = Object.fromEntries(exec.cenarios.map((c) => [c.id, c.titulo]))
-  const concluida = exec.status === 'CONCLUIDA'
+  const concluida = exec.status === 'CONCLUIDA' && exec.etapa === 'COMPOSICAO'
 
   return (
     <>
@@ -113,7 +115,7 @@ export function ExecucaoDetalhe() {
 
           {exec.status === 'ERRO' && <Erro mensagem={exec.mensagemErro ?? 'A geração não foi concluída.'} />}
 
-          {exec.status === 'EM_ANDAMENTO' && (
+          {(exec.status === 'EM_ANDAMENTO' || (exec.status === 'CONCLUIDA' && !concluida)) && (
             <Painel>
               <ProgressoExecucao etapa={exec.etapa} />
             </Painel>
@@ -135,7 +137,7 @@ export function ExecucaoDetalhe() {
 
           <Painel>
             <Card>
-              <CardCabecalho titulo="Requisito" sub={`Coletado do Jira em ${dataHora(tarefa.coletadaEm)}`} />
+              <CardCabecalho titulo="Requisito" sub={`${tarefa.origem === 'MANUAL' ? 'Informado manualmente' : 'Coletado do Jira'} em ${dataHora(tarefa.coletadaEm)}`} />
               <p className="px-5 py-4 text-sm leading-relaxed text-texto">{tarefa.requisito}</p>
             </Card>
           </Painel>
@@ -143,8 +145,7 @@ export function ExecucaoDetalhe() {
           {concluida && exec.apuracaoDisponivel === false && (
             <Painel>
               <Card className="px-5 py-4 text-sm text-texto">
-                A apuração no banco ainda não está disponível. Os cenários foram gerados a partir do requisito;
-                confirme os resultados esperados antes de executar os testes.
+                Nenhuma apuração foi registrada nesta execução. Você pode adicionar consultas abaixo antes da conferência.
               </Card>
             </Painel>
           )}
@@ -175,17 +176,21 @@ export function ExecucaoDetalhe() {
 
           {concluida && (
             <div id="conferencia" className="scroll-mt-44">
+              <PainelApuracao execucao={exec} onSalvo={() => setVersao((v) => v + 1)} />
               <Painel>
                 <PainelRevisao execucao={exec} onRegistrar={registrar} />
+                <HistoricoRevisoes execucaoId={id} revisaoId={exec.revisao?.id} />
               </Painel>
+              <PublicarJira execucao={exec} />
+              {modoApi === 'http' && exec.apuracoes.length > 0 && <a className="mt-3 block text-sm text-link underline" href={`/api/execucoes/${id}/apuracoes.csv`}>Exportar apurações CSV</a>}
             </div>
           )}
 
           {concluida && exec.apuracoes.length > 0 && (
             <section className="border-t border-borda pt-6">
-              <h2 className="mb-1 text-lg font-bold text-enfase">Modelos de IA</h2>
+              <h2 className="mb-1 text-lg font-bold text-enfase">Consultas e resultados por provedor</h2>
               <p className="mb-3 text-sm text-texto-sec">
-                O que cada modelo retornou em cada apuração. Modelos com a mesma cor de hash chegaram ao mesmo resultado.
+                Consultas e resultados registrados em cada apuração. A mesma cor de hash indica resultados equivalentes.
               </p>
               <Painel className="space-y-4">
                 {exec.apuracoes.map((a) => (

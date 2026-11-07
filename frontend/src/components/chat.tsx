@@ -134,7 +134,7 @@ function ExecucaoNoChat({ id, versao }: { id: number; versao: number }) {
   const { tarefa } = exec
   const concluida = exec.status === 'CONCLUIDA'
   const valores: Valores = Object.fromEntries(
-    exec.apuracoes.map((a) => [a.id, a.resultadoReferencia ? valorNoGherkin(a.resultadoReferencia) : null]),
+    exec.apuracoes.map((a) => [a.id, a.valorCorrigido ?? (a.resultadoReferencia ? valorNoGherkin(a.resultadoReferencia) : null)]),
   )
 
   return (

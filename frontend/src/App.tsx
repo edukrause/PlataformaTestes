@@ -5,6 +5,7 @@ import { Assistente } from './pages/Assistente'
 import { ExecucaoDetalhe } from './pages/ExecucaoDetalhe'
 import { ListaExecucoes } from './pages/ListaExecucoes'
 import { Metricas } from './pages/Metricas'
+import { NovaExecucao } from './components/Operacoes'
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
           <Route index element={<Assistente />} />
           <Route path="conversas/:id" element={<Assistente />} />
           <Route path="execucoes" element={<ListaExecucoes />} />
+          <Route path="nova" element={<NovaExecucao />} />
           <Route path="execucoes/:id" element={<ExecucaoDetalhe />} />
           <Route path="metricas" element={<Metricas />} />
           <Route path="*" element={<Vazio>Página não encontrada.</Vazio>} />

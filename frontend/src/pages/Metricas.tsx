@@ -1,9 +1,12 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { api, type Decisao, type Desfecho } from '../api'
 import { Card, Carregando, Erro, Selo, TituloPagina } from '../components/ui'
 import { PONTO_DESFECHO } from '../util/cores'
 import { pct, ROTULO_DECISAO, ROTULO_DESFECHO, ROTULO_PROVEDOR, segundos, usd } from '../util/formato'
 import { useCarregar } from '../util/useCarregar'
+import { modoApi } from '../api'
+import { chamar } from '../api/httpApi'
+import type { Metricas as MetricasDados } from '../api'
 
 const COR_DECISAO: Record<Decisao, string> = {
   ACEITO: 'bg-sucesso-status',
@@ -13,7 +16,7 @@ const COR_DECISAO: Record<Decisao, string> = {
 
 const EXPLICA_DESFECHO: Record<Desfecho, string> = {
   UNANIME: 'Os 3 modelos chegaram ao mesmo valor',
-  MAIORIA: '2 dos 3 modelos chegaram ao mesmo valor',
+  MAIORIA: 'Dois modelos chegaram ao mesmo resultado',
   DIVERGENTE: 'Os modelos chegaram a valores diferentes',
   FALHA: 'Menos de 2 consultas funcionaram',
 }
@@ -28,7 +31,8 @@ const EXPLICA_DECISAO: Record<Decisao, string> = {
 const POUCAS_CONFERIDAS = 10
 
 export function Metricas() {
-  const { dados: m, erro, recarregar } = useCarregar(() => api.obterMetricas())
+  const [origem, setOrigem] = useState('TODAS')
+  const { dados: m, erro, recarregar } = useCarregar(() => modoApi === 'http' ? chamar<MetricasDados>(`/metricas?origem=${origem}`) : api.obterMetricas(), [origem])
 
   if (erro) return <Erro mensagem={erro} onTentar={recarregar} />
   if (!m) return <Carregando />
@@ -41,7 +45,8 @@ export function Metricas() {
   const custoOk = m.custoMedioApuracaoUsd <= 0.1
   const tempoOk = m.tempoMedioApuracaoS <= 60
 
-  const metas = [aceitas >= 0.6, semRef <= 0.25, m.valoresAlteradosPct <= 0.1, custoOk && tempoOk]
+  const referenciasRevisadas = m.referenciasRevisadas ?? (conferidas ? m.totalApuracoes : 0)
+  const metas = [conferidas > 0 && aceitas >= 0.6, m.totalApuracoes > 0 && semRef <= 0.25, referenciasRevisadas > 0 && m.valoresAlteradosPct <= 0.1, m.totalApuracoes > 0 && custoOk && tempoOk]
   const atingidas = metas.filter(Boolean).length
 
   return (
@@ -50,6 +55,7 @@ export function Metricas() {
         titulo="Métricas"
         sub="Como a plataforma está se saindo. As metas são as do plano de validação do TCC."
       />
+      {modoApi === 'http' && <div className="mb-4 flex items-center gap-4 text-sm"><label>Origem <select className="rounded border border-borda bg-fundo p-2" value={origem} onChange={(e) => setOrigem(e.target.value)}><option value="TODAS">Todas</option><option value="MODELOS">Geradas pelos modelos</option><option value="MANUAL">Informadas manualmente</option></select></label><a className="text-link underline" href={`/api/metricas.csv?origem=${origem}`}>Exportar métricas CSV</a></div>}
 
       <Card className="mb-6 flex flex-wrap items-center gap-x-6 gap-y-2 p-5">
         <div>
@@ -68,6 +74,7 @@ export function Metricas() {
           codigo="M4"
           pergunta="Os cenários gerados estão sendo aproveitados?"
           ok={metas[0]}
+          avaliavel={conferidas > 0}
           valor={pct(aceitas)}
           frase={`${aceitasN} de ${conferidas} tarefas conferidas foram aceitas pelo analista, com ou sem ajuste.`}
           meta="Meta: pelo menos 60%"
@@ -79,6 +86,7 @@ export function Metricas() {
           codigo="M8"
           pergunta="Os modelos estão concordando no valor esperado?"
           ok={metas[1]}
+          avaliavel={m.totalApuracoes > 0}
           valor={pct(semRef)}
           frase={`${semRefN} de ${m.totalApuracoes} apurações ficaram sem valor de referência e precisaram ser apuradas à mão.`}
           meta="Meta: no máximo 25%"
@@ -90,6 +98,7 @@ export function Metricas() {
           codigo="M12"
           pergunta="Os valores apurados estão certos?"
           ok={metas[2]}
+          avaliavel={referenciasRevisadas > 0}
           valor={pct(m.valoresAlteradosPct)}
           frase="Parte dos valores que o analista precisou corrigir na conferência. Quanto menor, melhor."
           meta="Meta: no máximo 10%"
@@ -101,8 +110,9 @@ export function Metricas() {
           codigo="M13"
           pergunta="Apurar um valor sai barato e rápido?"
           ok={metas[3]}
+          avaliavel={m.totalApuracoes > 0}
           valor={`${usd(m.custoMedioApuracaoUsd)} · ${m.tempoMedioApuracaoS.toFixed(1).replace('.', ',')} s`}
-          frase="Custo e tempo médios de cada valor apurado, somando as consultas dos três modelos."
+          frase="Custo e tempo médios de cada valor apurado, incluindo as tentativas dos provedores participantes."
           meta="Meta: até US$ 0,10 e até 60 s"
         >
           <div className="space-y-2">
@@ -150,7 +160,7 @@ export function Metricas() {
           <thead>
             <tr className="border-y border-borda bg-neutro-2 text-left text-xs text-texto-sec">
               <th className="px-5 py-2 font-bold">Modelo</th>
-              <th className="px-3 py-2 text-right font-bold">Consultas geradas</th>
+              <th className="px-3 py-2 text-right font-bold">Consultas avaliadas</th>
               <th className="w-[30%] px-3 py-2 font-bold">Funcionaram</th>
               <th className="px-3 py-2 text-right font-bold">Custo total</th>
               <th className="px-5 py-2 text-right font-bold">Tempo médio de resposta</th>
@@ -193,6 +203,7 @@ function Indicador({
   frase,
   meta,
   children,
+  avaliavel = true,
 }: {
   codigo: string
   pergunta: string
@@ -201,6 +212,7 @@ function Indicador({
   frase: string
   meta: string
   children: ReactNode
+  avaliavel?: boolean
 }) {
   return (
     <Card className="flex flex-col p-5">
@@ -210,7 +222,7 @@ function Indicador({
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <span className="text-3xl font-bold text-enfase tabular-nums">{valor}</span>
-        {ok ? (
+        {!avaliavel ? <Selo cor="bg-neutro-2 text-texto-sec">Sem dados suficientes</Selo> : ok ? (
           <Selo cor="bg-sucesso-fundo text-sucesso">✓ Meta atingida</Selo>
         ) : (
           <Selo cor="bg-aviso-fundo text-aviso">! Fora da meta</Selo>

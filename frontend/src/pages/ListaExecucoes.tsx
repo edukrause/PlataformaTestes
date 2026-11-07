@@ -8,6 +8,8 @@ import { Card, Carregando, Erro, Selo, TituloPagina, Vazio } from '../components
 import { ATENCOES, atencoes } from '../util/atencao'
 import { data, horas, ROTULO_AREA } from '../util/formato'
 import { useCarregar } from '../util/useCarregar'
+import { modoApi } from '../api'
+import { Lotes } from '../components/Operacoes'
 
 export function ListaExecucoes() {
   const { dados, erro, carregando, recarregar } = useCarregar(() => api.listarExecucoes())
@@ -46,6 +48,8 @@ export function ListaExecucoes() {
   return (
     <>
       <TituloPagina titulo="Execuções" sub="Demandas processadas e a situação de cada uma no Jira. Clique para ver os cenários." />
+      {modoApi === 'http' && <div className="mb-4 flex gap-4 text-sm"><Link className="font-bold text-link underline" to="/nova">Nova execução</Link><a className="text-link underline" href="/api/execucoes.csv">Exportar execuções CSV</a></div>}
+      <Lotes />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <input

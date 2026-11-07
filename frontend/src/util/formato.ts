@@ -55,6 +55,7 @@ export const ROTULO_VERIFICACAO: Record<Verificacao, string> = {
   ERRO_EXECUCAO: 'Erro na execução',
   VAZIO: 'Retorno vazio',
   LIMITE_EXCEDIDO: 'Resultado descartado por exceder os limites',
+  ERRO_GERACAO: 'O provedor não gerou uma consulta válida',
 }
 
 const fmtInteiro = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 })

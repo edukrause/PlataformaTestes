@@ -1,6 +1,6 @@
 import type { PlataformaApi } from './contrato'
 
-async function chamar<T>(caminho: string, init?: RequestInit): Promise<T> {
+export async function chamar<T>(caminho: string, init?: RequestInit): Promise<T> {
   const resp = await fetch(`/api${caminho}`, {
     headers: { 'Content-Type': 'application/json' },
     ...init,

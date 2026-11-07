@@ -31,7 +31,7 @@ export type Etapa = 'COLETA' | 'CENARIOS' | 'APURACAO' | 'COMPOSICAO'
 export type TipoCenario = 'ALTERACAO' | 'REGRESSAO'
 
 /** Resultado da verificação em camadas de um candidato. */
-export type Verificacao = 'VALIDO' | 'REJEITADO_SINTAXE' | 'ERRO_EXPLAIN' | 'ERRO_EXECUCAO' | 'VAZIO' | 'LIMITE_EXCEDIDO'
+export type Verificacao = 'VALIDO' | 'REJEITADO_SINTAXE' | 'ERRO_EXPLAIN' | 'ERRO_EXECUCAO' | 'VAZIO' | 'LIMITE_EXCEDIDO' | 'ERRO_GERACAO'
 
 export type Celula = string | number | boolean | null
 
@@ -42,6 +42,7 @@ export interface Tabela {
 }
 
 export interface Tarefa {
+  origem?: 'JIRA' | 'MANUAL'
   id: number
   chaveJira: string
   titulo: string
@@ -111,7 +112,8 @@ export interface RelatorioConferencia {
 
 export interface Apuracao {
   id: number
-  origem?: 'MANUAL'
+  origem?: 'MANUAL' | 'MODELOS'
+  valorCorrigido?: string | null
   cenarioId: number | null
   pergunta: string
   subesquema: string[]
@@ -131,6 +133,7 @@ export interface PontoAtencao {
 }
 
 export interface Revisao {
+  valoresCorrigidos?: Record<number, string>
   id: number
   analista: string
   decisao: Decisao
@@ -196,6 +199,9 @@ export interface RevisaoRequest {
 }
 
 export interface Metricas {
+  referenciasRevisadas?: number
+  apuracoesManuais?: number
+  apuracoesModelos?: number
   totalExecucoes: number
   totalApuracoes: number
   desfechos: Record<Desfecho, number>

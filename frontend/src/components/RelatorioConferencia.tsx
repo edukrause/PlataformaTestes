@@ -85,7 +85,11 @@ function baixarCsv(r: Relatorio, nome: string) {
     if (v === null) return ''
     if (typeof v === 'number') return String(v).replace('.', ',')
     if (typeof v === 'boolean') return v ? 'verdadeiro' : 'falso'
-    return /[;"\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v
+    let inicio = 0
+    while (inicio < v.length && v.charCodeAt(inicio) <= 32) inicio++
+    const operador = v[inicio]
+    const seguro = operador && '=+@-'.includes(operador) ? `'${v}` : v
+    return /[;"\n\r]/.test(seguro) ? `"${seguro.replace(/"/g, '""')}"` : seguro
   }
   const linhas = [r.colunas, ...r.linhas, ...(r.total ? [r.total] : [])].map((l) => l.map(campo).join(';'))
   // o BOM faz o Excel reconhecer o UTF-8 (acentos)

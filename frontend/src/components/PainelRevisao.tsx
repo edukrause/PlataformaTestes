@@ -26,8 +26,9 @@ interface Props {
 }
 
 export function PainelRevisao({ execucao, onRegistrar }: Props) {
-  if (execucao.revisao) return <RevisaoRegistrada revisao={execucao.revisao} />
-  return <FormRevisao execucao={execucao} onRegistrar={onRegistrar} />
+  const [editando, setEditando] = useState(false)
+  if (execucao.revisao && !editando) return <div className="space-y-2"><RevisaoRegistrada revisao={execucao.revisao} /><Botao onClick={() => setEditando(true)}>Atualizar conferência</Botao></div>
+  return <FormRevisao execucao={execucao} onRegistrar={async (req) => { await onRegistrar(req); setEditando(false) }} />
 }
 
 function RevisaoRegistrada({ revisao }: { revisao: Revisao }) {
@@ -42,6 +43,9 @@ function RevisaoRegistrada({ revisao }: { revisao: Revisao }) {
         <div>
           <dt className="text-texto-sec">Valores alterados</dt>
           <dd className="font-medium">{revisao.valoresAlterados}</dd>
+          {Object.entries(revisao.valoresCorrigidos ?? {}).map(([id, valor]) => (
+            <p key={id} className="whitespace-pre-wrap">A{id}: {valor}</p>
+          ))}
         </div>
         <div className="sm:col-span-3">
           <dt className="text-texto-sec">Comentário</dt>
@@ -55,10 +59,10 @@ function RevisaoRegistrada({ revisao }: { revisao: Revisao }) {
 function FormRevisao({ execucao, onRegistrar }: Props) {
   // O tempo de revisão (M12/M13 do plano de validação) conta a partir da abertura da tela.
   const [decorridoS, setDecorridoS] = useState(0)
-  const [decisao, setDecisao] = useState<Decisao | null>(null)
+  const [decisao, setDecisao] = useState<Decisao | null>(execucao.revisao?.decisao ?? null)
   const [analista, setAnalista] = useState(lerAnalista)
-  const [comentario, setComentario] = useState('')
-  const [corrigidos, setCorrigidos] = useState<Record<number, string>>({})
+  const [comentario, setComentario] = useState(execucao.revisao?.comentario ?? '')
+  const [corrigidos, setCorrigidos] = useState<Record<number, string>>(execucao.revisao?.valoresCorrigidos ?? {})
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
 
@@ -119,7 +123,7 @@ function FormRevisao({ execucao, onRegistrar }: Props) {
                   name="decisao"
                   className="sr-only"
                   checked={decisao === o.decisao}
-                  onChange={() => setDecisao(o.decisao)}
+                  onChange={() => { setDecisao(o.decisao); if (o.decisao !== 'ACEITO_ALTERACAO') setCorrigidos({}) }}
                 />
                 <span className="font-medium text-enfase">{ROTULO_DECISAO[o.decisao]}</span>
                 <span className="mt-1 block text-xs text-texto-sec">{o.ajuda}</span>
@@ -145,7 +149,7 @@ function FormRevisao({ execucao, onRegistrar }: Props) {
                   </span>
                   <input
                     value={corrigidos[a.id] ?? ''}
-                    onChange={(e) => setCorrigidos((c) => ({ ...c, [a.id]: e.target.value }))}
+                    onChange={(e) => { setCorrigidos((c) => ({ ...c, [a.id]: e.target.value })); if (e.target.value.trim()) setDecisao('ACEITO_ALTERACAO') }}
                     placeholder="valor correto"
                     className="h-9 rounded border border-borda bg-fundo px-2 text-sm focus:outline-none focus:border-selecionado focus:ring-1 focus:ring-selecionado"
                   />

@@ -34,6 +34,9 @@ export function ApuracaoCard({ apuracao, cenarioTitulo }: { apuracao: Apuracao; 
             <SeloDesfecho desfecho={apuracao.desfecho} />
           </div>
           <div className="mt-2">
+            {apuracao.valorCorrigido != null && (
+              <p className="mb-2 whitespace-pre-wrap text-sm font-medium">Valor validado pelo analista: {apuracao.valorCorrigido}</p>
+            )}
             {apuracao.resultadoReferencia ? (
               <TabelaResultado tabela={apuracao.resultadoReferencia} destaque />
             ) : (
@@ -84,7 +87,7 @@ export function ModelosApuracao({ apuracao }: { apuracao: Apuracao }) {
 }
 
 function Candidato({ c, corGrupo, concorda }: { c: CandidatoSql; corGrupo: string | null; concorda: boolean }) {
-  const valido = c.verificacao === 'VALIDO'
+  const valido = c.verificacao === 'VALIDO' && c.hashResultado !== null
   return (
     <div className="flex min-w-0 flex-col gap-3 bg-superficie p-4">
       <div className="flex items-start justify-between gap-2">
@@ -127,6 +130,10 @@ function Candidato({ c, corGrupo, concorda }: { c: CandidatoSql; corGrupo: strin
           {usd(c.custoUsd)} · {segundos(c.latenciaMs)}
         </dd>
       </dl>
+      <details className="text-sm">
+        <summary className="cursor-pointer font-medium">Consulta SQL</summary>
+        <pre className="mt-2 overflow-x-auto rounded bg-fundo p-3 font-mono text-xs whitespace-pre-wrap break-words">{c.consulta || 'Nenhuma consulta foi gerada.'}</pre>
+      </details>
     </div>
   )
 }
