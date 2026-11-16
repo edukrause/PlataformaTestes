@@ -36,6 +36,17 @@ plataforma:
     max-amostras: ${ERP_AMOSTRA_MAX_VALORES:5}
     max-tabelas: ${ERP_CATALOGO_MAX_TABELAS:12}
     profundidade: ${ERP_CATALOGO_PROFUNDIDADE:1}
+  erp:
+    # SGBD do banco consultado: POSTGRESQL ou MYSQL. Define o gateway de leitura, o catálogo e o SQL pedido aos modelos.
+    dialeto: ${ERP_DIALETO:POSTGRESQL}
+  mysql:
+    habilitado: ${ERP_MYSQL_HABILITADO:false}
+    url: ${ERP_MYSQL_URL:}
+    usuario: ${ERP_MYSQL_USUARIO:}
+    senha: ${ERP_MYSQL_SENHA:}
+    timeout-segundos: ${ERP_MYSQL_TIMEOUT_SEGUNDOS:10}
+    max-linhas: ${ERP_MYSQL_MAX_LINHAS:1000}
+    max-caracteres: ${ERP_MYSQL_MAX_CARACTERES:1000000}
   postgres:
     habilitado: ${ERP_POSTGRES_HABILITADO:false}
     url: ${ERP_POSTGRES_URL:}

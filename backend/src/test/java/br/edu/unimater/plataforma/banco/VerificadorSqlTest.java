@@ -48,4 +48,29 @@ class VerificadorSqlTest {
         assertThatThrownBy(() -> service.consultar("DROP TABLE public.produto")).isInstanceOf(ErroApi.class);
         verifyNoInteractions(banco);
     }
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "SELECT `p`.`id`, IFNULL(`p`.`preco`, 0) AS preco FROM `erp`.`produto` `p`",
+            "SELECT DATE_FORMAT(emissao, '%Y-%m') AS mes, SUM(total) FROM erp.pedido GROUP BY DATE_FORMAT(emissao, '%Y-%m')",
+            "SELECT YEAR(emissao), COUNT(*) FROM erp.pedido WHERE emissao >= DATE_SUB('2026-01-01', INTERVAL 1 MONTH) GROUP BY YEAR(emissao)",
+            "SELECT id FROM erp.pedido LIMIT 10"
+    })
+    void mysqlAceitaCraseEFuncoesDoDialeto(String sql) {
+        assertThat(new VerificadorSql(Dialeto.MYSQL).validar(sql)).isNotBlank();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "DELETE FROM `erp`.`produto`", "SELECT id FROM erp.produto FOR UPDATE", "SELECT id FROM erp.produto LOCK IN SHARE MODE",
+            "SELECT SLEEP(5)", "SELECT LOAD_FILE('/etc/passwd')", "SELECT id INTO OUTFILE '/tmp/x' FROM erp.produto",
+            "SELECT TO_CHAR(emissao, 'YYYY') FROM erp.pedido", "SELECT BENCHMARK(1000000, MD5('x'))"
+    })
+    void mysqlRecusaEscritaBloqueioArquivosEFuncoesDeOutroDialeto(String sql) {
+        assertThatThrownBy(() -> new VerificadorSql(Dialeto.MYSQL).validar(sql)).isInstanceOf(ErroApi.class);
+    }
+
+    @Test void postgresNaoAceitaFuncoesExclusivasDoMysql() {
+        assertThatThrownBy(() -> verificador.validar("SELECT IFNULL(preco, 0) FROM public.produto")).isInstanceOf(ErroApi.class);
+        assertThat(verificador.validar("SELECT DATE_TRUNC('month', emissao) FROM public.pedido")).isNotBlank();
+    }
 }

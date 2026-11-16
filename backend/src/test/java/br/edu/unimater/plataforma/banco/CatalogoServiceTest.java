@@ -49,4 +49,16 @@ class CatalogoServiceTest {
         service.invalidar();service.obter();
         verify(banco,times(4)).consultar(anyString());
     }
+    @Test void mysqlLeCatalogoPeloInformationSchemaEEscapaComCrase() {
+        var service=new CatalogoService(banco,new CatalogoProperties(List.of("erp"),List.of("erp.t`abela.status"),3,10,1),0,Dialeto.MYSQL);
+        when(banco.consultar(contains("information_schema.COLUMNS"))).thenReturn(new Resultado(Verificacao.VALIDO,List.of(),
+                List.of(List.of("erp","t`abela","status","varchar","YES"),List.of("erp","item","tabela_id","int","NO")),null,0));
+        when(banco.consultar(contains("KEY_COLUMN_USAGE"))).thenReturn(new Resultado(Verificacao.VALIDO,List.of(),
+                List.of(List.of("erp","item","tabela_id","erp","t`abela","status")),null,0));
+        when(banco.consultar(startsWith("SELECT DISTINCT"))).thenReturn(new Resultado(Verificacao.VALIDO,List.of(),List.of(List.of("ATIVO")),null,0));
+        assertThat(service.obter().relacionamentos()).containsExactly(new Relacao("erp.item","tabela_id","erp.t`abela","status"));
+        service.amostrar("erp","t`abela","status");
+        verify(banco).consultar("SELECT DISTINCT `status` FROM `erp`.`t``abela` WHERE `status` IS NOT NULL LIMIT 3");
+        verify(banco,never()).consultar(contains("pg_constraint"));
+    }
 }

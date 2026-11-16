@@ -14,4 +14,6 @@ public interface ConsultaBancoGateway {
         }
     }
     Resultado consultar(String consultaValidada);
+    /** Indica se a leitura do banco do ERP foi habilitada na configuração. */
+    boolean habilitado();
 }

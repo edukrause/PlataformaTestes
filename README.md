@@ -21,7 +21,7 @@ como referência quando ao menos dois resultados coincidem. A conferência do an
 3. O **Módulo 1** gera os cenários de teste em Gherkin e valida a sintaxe.
 4. Para cada valor que o cenário precisa conferir, o **Módulo 2** pede consultas SQL independentes.
    Os adaptadores de Claude, Gemini e Llama/Groq estão implementados.
-5. As consultas passam por um verificador e são executadas no PostgreSQL de homologação, só leitura, com limite
+5. As consultas passam por um verificador e são executadas no banco de homologação (MySQL ou PostgreSQL), só leitura, com limite
    de tempo e de linhas.
 6. Se pelo menos dois dos três resultados coincidirem, o valor vira a referência do cenário; se não, o
    cenário fica marcado como "valor a apurar".
@@ -52,12 +52,12 @@ no navegador: **https://edukrause.github.io/PlataformaTestes/**
   - gateway de modelos com um adaptador por provedor;
   - compositor de saída e registro de execuções.
 - **Base local** (H2 em arquivo) para auditoria e métricas.
-- **PostgreSQL de homologação** acessado só com usuário somente leitura, com limite de tempo e de linhas.
+- **Banco de homologação do ERP** (MySQL ou PostgreSQL) acessado só com usuário somente leitura, com limite de tempo e de linhas.
 
 Os diagramas ficam em [`docs/diagramas`](docs/diagramas). Os arquivos `.mmd` são a fonte, e os `.svg` e `.png`
 são gerados a partir deles.
-Os diagramas e as entregas acadêmicas E1–E5 registram o planejamento original com MySQL;
-a implementação atual usa PostgreSQL, conforme a [documentação do módulo](backend/docs/postgresql.md).
+As entregas acadêmicas E1–E5 registram o planejamento original. A implementação lê MySQL e PostgreSQL,
+conforme a documentação de [MySQL](backend/docs/mysql.md) e [PostgreSQL](backend/docs/postgresql.md).
 
 ```bash
 npx @mermaid-js/mermaid-cli -i docs/diagramas/arquitetura.mmd -o docs/diagramas/arquitetura.svg -b white
@@ -74,7 +74,7 @@ npx @mermaid-js/mermaid-cli -i docs/diagramas/arquitetura.mmd -o docs/diagramas/
 
 O aplicativo local inclui interface e backend no mesmo JAR. É possível criar execuções e informar consultas
 manualmente sem IA, ou gerar cenários e SQL com Claude, Gemini e Llama/Groq após configurar as integrações.
-Estão implementados Jira, Confluence, catálogo PostgreSQL, apuração, consenso, correções com histórico,
+Estão implementados Jira, Confluence, catálogo MySQL/PostgreSQL, apuração, consenso, correções com histórico,
 lote, exportação CSV e publicação opcional dos cenários aprovados no Jira.
 Implementação e testes simulados não substituem a validação com as credenciais e regras reais do seu ambiente.
 

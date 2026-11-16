@@ -1,6 +1,6 @@
 # Backend e aplicação local
 
-Java 21, Spring Boot 3.5, JDBC, Flyway e H2. PostgreSQL é a fonte consultada em modo somente leitura.
+Java 21, Spring Boot 3.5, JDBC, Flyway e H2. O banco do ERP, PostgreSQL ou MySQL, é consultado em modo somente leitura.
 A aplicação funciona sem IA pela entrada manual e pode gerar cenários e SQL com Claude, Gemini e
 Llama/Groq quando as respectivas credenciais forem configuradas.
 
@@ -51,7 +51,7 @@ terminal têm precedência. Não preencha segredos em arquivos versionados.
 - **Confluence:** URL base incluindo `/wiki` no Cloud, autenticação, API 2 (Cloud) ou 1 (REST anterior) e
   `CONFLUENCE_PAGINAS` no formato `ESTOQUE:12345,PROJ-123:67890`. O mapeamento por tarefa prevalece sobre a área.
   Solicitar documentação sem configuração válida produz uma pendência/erro explícito.
-- **PostgreSQL:** conta dedicada com SELECT e sem superusuário. Veja [PostgreSQL](docs/postgresql.md).
+- **Banco do ERP:** `ERP_DIALETO=POSTGRESQL` ou `MYSQL`, conta dedicada somente com SELECT. Veja [PostgreSQL](docs/postgresql.md) e [MySQL](docs/mysql.md).
 - **Domínio:** preencha `DOMINIO_REGRAS` com as regras reais de empresa, filial, cancelados e exclusão lógica.
   O gerador SQL recusa iniciar sem essas regras. O texto orienta o prompt; o analista verifica sua aplicação.
 - **Escrita no Jira:** `JIRA_ESCRITA_HABILITADA=true` habilita ações explícitas na interface.

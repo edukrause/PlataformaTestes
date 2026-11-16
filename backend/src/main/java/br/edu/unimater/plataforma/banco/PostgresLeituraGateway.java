@@ -4,15 +4,19 @@ import br.edu.unimater.plataforma.api.ErroApi;
 import java.sql.*;
 import java.time.*;
 import java.util.*;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
+@ConditionalOnProperty(name = "plataforma.erp.dialeto", havingValue = "POSTGRESQL", matchIfMissing = true)
 @EnableConfigurationProperties(PostgresProperties.class)
 public class PostgresLeituraGateway implements ConsultaBancoGateway {
     private final PostgresProperties config;
 
     public PostgresLeituraGateway(PostgresProperties config) { this.config = config; }
+
+    @Override public boolean habilitado() { return config.habilitado(); }
 
     @Override public Resultado consultar(String sql) {
         validarConfiguracao();
