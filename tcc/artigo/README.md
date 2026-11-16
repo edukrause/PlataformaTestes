@@ -5,8 +5,8 @@
 | `artigo.md` | Fonte editável do texto (convenções no topo de `gerar_docx.py`) |
 | `artigo.docx` | Versão editável, gerada sobre o template institucional |
 | `artigo.pdf` | Versão para leitura, convertida pelo LibreOffice |
-| `figuras/` | Figuras em SVG (fonte) e PNG; `gerar_figuras.py` recria as três |
-| `demonstracao/` | Base sintética, script e resultados da demonstração da Seção 4.3 |
+| `figuras/` | Figuras em SVG (fonte) e PNG; `gerar_figuras.py` recria os três diagramas e `gerar_graficos.py` os dois gráficos |
+| `demonstracao/` | Base sintética, script e resultados da demonstração da Seção 4.3; `medicao.py` gera `medicoes.csv` (dez rodadas) |
 | `evidencias/` | Resumo da suíte de testes executada em 16/11/2026 |
 | `PENDENCIAS.md` | O que falta e de quem depende |
 

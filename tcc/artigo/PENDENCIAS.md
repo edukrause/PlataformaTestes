@@ -20,7 +20,7 @@ demonstração. Nenhum resultado experimental foi inventado; as métricas M1–M
 ## Editoriais
 
 - Extensão: corpo com cerca de 6.500 palavras (com tabelas e legendas), dentro de 6.000–8.000. Em Arial 12 e
-  espaçamento 1,5, o corpo ocupa 21 páginas e o PDF completo 28 (referências e apêndice). A faixa de 15–20 páginas
+  espaçamento 1,5, o corpo vai até a página 23 e o PDF completo tem 29 (referências e apêndice). A faixa de 15–20 páginas
   não é compatível com 6.000 palavras nesse formato; fonte e espaçamento não foram reduzidos. Decidir com o orientador.
 - O DOCX foi gerado por `gerar_docx.py` sobre o template institucional e o PDF pelo LibreOffice 7+;
   abrir uma vez no Microsoft Word para conferir quebras antes da entrega.
@@ -33,10 +33,12 @@ Conferido em 16/11/2026. Os templates são os mesmos de `tcc/continuidade/modelo
 (resumo, Seções 1 a 6, quadro comparativo com "Este trabalho", enfoque, etapas, validação) atende ao escopo.
 Ficam em aberto, fora do texto do artigo:
 
-- **E7**: marcar a versão candidata no Git (tag, por exemplo `v1.0-rc`) e declarar o escopo congelado.
-- **E8**: dados brutos, tabelas, 2 a 4 gráficos e comparação com a linha de base; dependem da coleta (itens 1 a 6 acima).
-- **E9** (24/11): slides (12 a 15), roteiro e vídeo da demonstração, ensaio cronometrado e próximos passos do TCC II com estimativa de esforço.
-- O escopo indica como ideal 15 a 25 referências e 15 a 20 páginas; o artigo tem 43 referências, todas citadas, e 28 páginas. Decidir com o orientador se corta.
+- **E7**: feito. Tag `v1.0-rc` e escopo congelado em `tcc/banca/PROXIMOS_PASSOS_TCC2.md`.
+- **E8**: feito no recorte técnico decidido pelo autor (o artefato funcionando): dez rodadas da demonstração em
+  `demonstracao/medicoes.csv` e dois gráficos (Figuras 4 e 5). Sem comparação com linha de base, que depende da coleta com analistas.
+- **E9** (24/11): slides (15), roteiro da demonstração e próximos passos do TCC II em `tcc/banca/`. Faltam o vídeo
+  da demonstração e o ensaio cronometrado, que são do autor.
+- O escopo indica como ideal 15 a 25 referências e 15 a 20 páginas; o artigo tem 43 referências, todas citadas, e 29 páginas. Decidir com o orientador se corta.
 
 ## Fora do Git
 

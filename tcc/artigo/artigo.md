@@ -179,36 +179,23 @@ Os resultados desta seção são de natureza técnica: descrevem o artefato cons
 
 ## 4.1 Artefato Construído
 
-O artefato implementa 32 dos 33 itens do backlog planejado; o item restante, a incorporação das alterações de código vinculadas à tarefa, foi classificado desde o planejamento como evolução futura. O repositório registra 30 versões entre 12/10/2026 e 16/11/2026. A camada de orquestração soma 49 arquivos Java, com 2.518 linhas não vazias, e expõe 28 operações REST; a interface soma 33 arquivos TypeScript, com 3.139 linhas; e a base local evolui por oito migrações versionadas.
+O artefato implementa 32 dos 33 itens do backlog planejado; o item restante, a incorporação das alterações de código vinculadas à tarefa, foi classificado desde o planejamento como evolução futura. O repositório registra mais de 30 versões entre 12/10/2026 e 16/11/2026. A camada de orquestração soma 49 arquivos Java, com 2.518 linhas não vazias, e expõe 28 operações REST; a interface soma 33 arquivos TypeScript, com 3.139 linhas; e a base local evolui por oito migrações versionadas.
 
 Em relação ao planejamento, três decisões merecem registro. Primeiro, os adaptadores dos três provedores usam diretamente o cliente HTTP de cada API, em vez da biblioteca de abstração prevista, o que permitiu tratar de forma uniforme a contagem de tokens, o truncamento da resposta e a ausência de modo JSON nativo na API da Anthropic (ANTHROPIC, 2026c). Segundo, a leitura do banco foi generalizada para MySQL e PostgreSQL. Terceiro, além do fluxo com modelos, a plataforma aceita entrada manual de cenários e de consultas, identificada como origem MANUAL e mantida separada nas métricas, o que permitiu operar e demonstrar o fluxo sem custos de provedores.
 
 ## 4.2 Verificação Automatizada
 
-A suíte completa foi executada em 16/11/2026 com Java 21.0.13 e Maven 3.9.9, com os testes de banco real habilitados sobre instâncias locais e descartáveis de MySQL 8.4.3 e PostgreSQL 16.4. A Tabela 1 agrupa os 121 testes por componente.
+A suíte completa foi executada em 16/11/2026 com Java 21.0.13 e Maven 3.9.9, com os testes de banco real habilitados sobre instâncias locais e descartáveis de MySQL 8.4.3 e PostgreSQL 16.4. A Figura 4 apresenta os 121 testes por componente; nenhum falhou.
 
-QUADRO|Tabela 1 – Testes automatizados por componente (execução de 16/11/2026)
-| Componente verificado | Testes | Falhas |
-|---|---|---|
-| Verificador SQL: subconjunto SELECT, escrita, bloqueios e funções por dialeto | 45 | 0 |
-| Leitura em MySQL real: tipos, limites, tempo, escrita bloqueada, privilégios e catálogo | 7 | 0 |
-| Leitura em PostgreSQL real: os mesmos aspectos | 8 | 0 |
-| Catálogo, seleção de subesquema e amostragem | 6 | 0 |
-| Normalização de resultados | 10 | 0 |
-| Motor de consenso | 6 | 0 |
-| Clientes HTTP de Claude, Gemini, Groq, Jira e Confluence (servidor simulado) | 9 | 0 |
-| Fluxos da API, IA desativada, validação de contexto e migração de dados | 18 | 0 |
-| Fluxo completo: geração, apuração, revisão, lote, CSV e publicação | 12 | 0 |
-| Total | 121 | 0 |
-FONTE|Fonte: elaborado pelo autor (2026), a partir dos relatórios de execução da suíte.
+FIG|figuras/grafico-testes.png|Figura 4 – Testes automatizados por componente (execução de 16/11/2026)|Fonte: elaborado pelo autor (2026), a partir dos relatórios de execução da suíte.
 
 Os testes dos clientes de modelos verificam, sem chamadas reais, o formato das requisições, a pseudonimização do conteúdo enviado, o cálculo de custo, o descarte de blocos de raciocínio, a marcação de respostas truncadas e a ausência de chaves e corpos de erro nas mensagens exibidas. Os testes de banco real confirmam que a plataforma recusa contas de superusuário, no PostgreSQL, ou com qualquer privilégio de escrita, no MySQL, e que uma instrução DELETE enviada diretamente ao gateway, sem passar pelo verificador, não altera os dados. O executável também foi iniciado com a configuração MySQL, e as operações de catálogo, seleção de subesquema e consulta responderam pela interface REST, com a tentativa de escrita recusada antes de chegar ao banco.
 
 ## 4.3 Demonstração em Base Sintética
 
-Para demonstrar o Módulo 2 de ponta a ponta, foi criada uma base MySQL sintética, sem dados do ERP estudado, com três produtos, oito pedidos e onze itens, incluindo um pedido cancelado, um com exclusão lógica, um de outra empresa e um fora do período. Foram formuladas cinco perguntas, cada uma com a consulta de referência escrita antes da execução e três consultas candidatas escritas pelo autor para exercitar situações específicas, enviadas pela apuração manual e acessadas com conta somente de consulta. Os rótulos dos provedores apenas ocupam as três posições de voto: nenhuma consulta foi gerada por modelo. A Tabela 2 apresenta o resultado.
+Para demonstrar o Módulo 2 de ponta a ponta, foi criada uma base MySQL sintética, sem dados do ERP estudado, com três produtos, oito pedidos e onze itens, incluindo um pedido cancelado, um com exclusão lógica, um de outra empresa e um fora do período. Foram formuladas cinco perguntas, cada uma com a consulta de referência escrita antes da execução e três consultas candidatas escritas pelo autor para exercitar situações específicas, enviadas pela apuração manual e acessadas com conta somente de consulta. Os rótulos dos provedores apenas ocupam as três posições de voto: nenhuma consulta foi gerada por modelo. A Tabela 1 apresenta o resultado.
 
-QUADRO|Tabela 2 – Desfechos da demonstração em base sintética
+QUADRO|Tabela 1 – Desfechos da demonstração em base sintética
 | Pergunta | Situação construída | Resultados dos candidatos | Desfecho | Valor apurado | Referência |
 |---|---|---|---|---|---|
 | Q1 – valor vendido no mês | Um candidato omite a exclusão lógica | 88,50; 88,50; 94,50 | Maioria | 88,50 | 88,50 |
@@ -219,6 +206,10 @@ QUADRO|Tabela 2 – Desfechos da demonstração em base sintética
 FONTE|Fonte: elaborado pelo autor (2026), a partir do registro de execuções da plataforma.
 
 Os cinco desfechos ocorreram como construídos. Em Q1, a omissão de um filtro foi isolada pelo voto dos outros dois candidatos, e o valor apurado coincidiu com a referência. Em Q2, diferenças de nome, ordem de colunas e ordenação de linhas não impediram a unanimidade. Em Q3, dois candidatos cometeram o mesmo erro e formaram maioria em torno de 180, enquanto a referência, que exclui o pedido cancelado, resulta em 140: é um falso acordo, e o candidato correto ficou vencido. Em Q4, nenhum valor foi proposto, e as três consultas foram exibidas para decisão. Em Q5, a instrução de escrita foi recusada pelo verificador e o resultado vazio não votou, restando um único válido. Cada apuração levou entre 164 e 392 milissegundos, medidos localmente e sem chamadas a modelos, e a base permaneceu inalterada.
+
+Para verificar a repetibilidade, as cinco perguntas foram reenviadas em dez rodadas, cada uma em uma execução nova, após uma rodada de aquecimento descartada. Os desfechos e os valores apurados foram idênticos nas 50 apurações. O tempo por apuração, da requisição à resposta da interface de programação, teve média de 106,8 ms e desvio padrão de 32,2 ms, com mínimo de 62,7 ms e máximo de 213,7 ms; a Figura 5 detalha a média e o desvio padrão por pergunta. Esse tempo abrange verificação, plano de execução, execução das três consultas, normalização, consenso e gravação, em uma base de poucas linhas, e não inclui a geração das consultas por modelos.
+
+FIG|figuras/grafico-tempos.png|Figura 5 – Tempo por apuração na demonstração em base sintética (dez rodadas)|Fonte: elaborado pelo autor (2026), a partir das medições registradas no repositório.
 
 ## 4.4 Situação da Avaliação Empírica
 
