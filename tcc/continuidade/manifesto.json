@@ -1,0 +1,95 @@
+{
+  "data": "2026-11-15",
+  "arquivos": [
+    {
+      "arquivo": "coleta/apuracoes.csv",
+      "bytes": 239,
+      "sha256": "5af59c97f05e66af9517dbd9b3d3da706239621bb548883ecada1ba1f0dc9e50"
+    },
+    {
+      "arquivo": "coleta/avaliacoes.csv",
+      "bytes": 165,
+      "sha256": "57bca92eb71374f83afb76a832f17297d2a869cec7198768dd0f22b42eb7b4e7"
+    },
+    {
+      "arquivo": "coleta/candidatos.csv",
+      "bytes": 239,
+      "sha256": "e54efc9432a339737327862f82f9360a0cc53a56078ee350354bbd8ee3d68d1c"
+    },
+    {
+      "arquivo": "coleta/cobertura.csv",
+      "bytes": 166,
+      "sha256": "9877e308c89555c5143429c99c64e66f08186d65e324b4de9a11cb82be3772d2"
+    },
+    {
+      "arquivo": "coleta/execucoes.csv",
+      "bytes": 234,
+      "sha256": "35ae0e88e22fc4787a0c957daa3129d1d53ff109fb3524bdb74d54bbaab55c24"
+    },
+    {
+      "arquivo": "coleta/metricas_planejadas.csv",
+      "bytes": 2794,
+      "sha256": "b69b615e8e3818b95a07309865e80bda57a7444399f72ac24ea4100ec5cf37ec"
+    },
+    {
+      "arquivo": "coleta/README.md",
+      "bytes": 1114,
+      "sha256": "e1c0a483920412a5665c9dcf075115cf3cae4652bb8a3842dbd0416b443b087f"
+    },
+    {
+      "arquivo": "coleta/selecao.csv",
+      "bytes": 141,
+      "sha256": "355cbae48d30a8587ba16fff0fbce03bc0289f14274c8973d81dd36ffe1e25fc"
+    },
+    {
+      "arquivo": "coleta/tempos.csv",
+      "bytes": 153,
+      "sha256": "5ee737d6708bef03f561b8e92485fccfc6028c70c637749aefd97271f9b2bc5c"
+    },
+    {
+      "arquivo": "ESTADO_E_EVIDENCIAS.md",
+      "bytes": 4451,
+      "sha256": "e0da7b8cba29583e37d6c0e99edf53e889529cb06a3fc54ffd48d918067a6f27"
+    },
+    {
+      "arquivo": "EXECUTAR_AVALIACAO.md",
+      "bytes": 7793,
+      "sha256": "c6cda254e57d96fc7a17a18a6894726e761157d2dceaf333387f46b455c41b16"
+    },
+    {
+      "arquivo": "modelos/Estrutura do Artigo 2026.docx",
+      "bytes": 102112,
+      "sha256": "e1fccffb59420f9169415dc9383616fa8b53d5962b34a7571685ccf7f03c4d0e"
+    },
+    {
+      "arquivo": "modelos/Template Artigo TCC Sistemas de Informação.docx",
+      "bytes": 29187,
+      "sha256": "e4fe192e237479be67b00baa6730f1361a181000641534bc87a8281ef1cfa7ca"
+    },
+    {
+      "arquivo": "PARA_O_CLAUDE.txt",
+      "bytes": 7611,
+      "sha256": "791cda97d8711f777a11f06f55adddbc6636f5e47a1155b0fda3e2a668a32457"
+    },
+    {
+      "arquivo": "README.md",
+      "bytes": 3186,
+      "sha256": "384df16b352e3ea66163d94e85494a9cfa909f765894e7491925ca767744ca45"
+    },
+    {
+      "arquivo": "REGRAS_GERACAO_BDD.md",
+      "bytes": 8513,
+      "sha256": "e2a404febe93db597aa63f7d57241933dcf111d20d1df02dd1c6320d98f553d2"
+    },
+    {
+      "arquivo": "ROTEIRO_ARTIGO.md",
+      "bytes": 8085,
+      "sha256": "39a3990b3f5f8ab300427641e5114046dbf66ac7982f204bbf9b95fc5d0c996a"
+    },
+    {
+      "arquivo": "testes-historicos-resumo.json",
+      "bytes": 2044,
+      "sha256": "21417d56b778eadca7bcc9541b351f62c83a576b19198ee0af1e1740b3b9acb2"
+    }
+  ]
+}

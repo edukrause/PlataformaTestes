@@ -1,0 +1,88 @@
+{
+  "nota": "Relatorios preexistentes inspecionados em 15/11/2026; nao reexecutados nesta preparacao.",
+  "suites": [
+    {
+      "suite": "br.edu.unimater.plataforma.apuracao.MotorConsensoTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "br.edu.unimater.plataforma.apuracao.NormalizadorResultadosTest",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "br.edu.unimater.plataforma.banco.CatalogoServiceTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "br.edu.unimater.plataforma.banco.PostgresLeituraTest",
+      "tests": 8,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 8
+    },
+    {
+      "suite": "br.edu.unimater.plataforma.banco.VerificadorSqlTest",
+      "tests": 32,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "br.edu.unimater.plataforma.FluxoApiTest",
+      "tests": 10,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "br.edu.unimater.plataforma.IaDesativadaTest",
+      "tests": 4,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "br.edu.unimater.plataforma.IntegracoesHttpTest",
+      "tests": 6,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "br.edu.unimater.plataforma.MigracaoHistoricoTest",
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "br.edu.unimater.plataforma.PlataformaCompletaTest",
+      "tests": 11,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "br.edu.unimater.plataforma.ValidacaoContextoTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    }
+  ],
+  "totais": {
+    "tests": 96,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 8
+  }
+}

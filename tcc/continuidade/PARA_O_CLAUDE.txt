@@ -1,0 +1,57 @@
+CONTINUIDADE DO TCC DE EDUARDO KRAUSE
+Preparado em 15/11/2026 para continuação no dia seguinte.
+
+Quero que você feche meu artigo de TCC usando o material e o código deste repositório. Execute o que for possível, revise com rigor e entregue o Word editável e o PDF. Não se limite a sugerir um plano. Se alguma medição depender de acesso indisponível ou de avaliadores humanos, finalize todo o restante e diga exatamente o que falta, sem inventar resultados.
+
+REPOSITÓRIO
+https://github.com/edukrause/PlataformaTestes
+Pasta local habitual: C:\Users\eduar\PlataformaTestes
+Comece por tcc/continuidade/README.md e leia os demais documentos desse diretório.
+Leia também docs/CONTINUIDADE.md, backend/README.md e backend/docs/postgresql.md.
+A versão examinada antes deste pacote foi o commit 317f3682f2a14ee9e7cc6e535e28c5c5c674c96e. Confira o estado atual e preserve alterações que encontrar.
+
+OBJETIVO E FONTES
+Autor: Eduardo Krause; curso: Análise e Desenvolvimento de Sistemas; instituição: Centro Universitário Mater Dei — UNIMATER.
+Orientador identificado no retorno da banca: Prof. Me. João Victor Costa Mazzochin.
+O trabalho propõe geração de cenários BDD para ERP e apuração de valores esperados por consultas ao banco, com comparação entre resultados de modelos e conferência humana.
+Proposta, retorno da banca, referências e entregas E3, E4 e E5 já estão em tcc/.
+O artigo deve seguir os dois documentos de tcc/continuidade/modelos/, copiados da orientação: 6.000–8.000 palavras, 15–20 páginas, Arial 12, espaçamento 1,5; resumo de 180–250 palavras em fonte 10 e espaço simples; 3–5 palavras-chave; referências em ABNT. Há diferenças práticas entre a extensão pedida e a diagramação: confira no PDF, sem reduzir a fonte ou falsificar a contagem.
+
+ESTADO REAL — NÃO CONFUNDIR PLANO COM RESULTADO
+O artigo completo AINDA NÃO FOI REDIGIDO. Existem textos de base e planejamento.
+O código atual usa PostgreSQL para consultar o ERP, não MySQL como E3/E4. H2 é a base local.
+Gemini e Llama/Groq têm implementação; Claude continua pendente. Com dois resultados iguais, o código classifica MAIORIA. UNANIME exige três famílias.
+Há registros históricos de 96 testes de software: 88 executados sem falhas e 8 ignorados por ausência de PostgreSQL descartável. Isso não prova eficácia com tarefas reais nem homologação das integrações.
+Em 15/11 foram feitas três tentativas reais de POST /api/execucoes com tarefas pré-selecionadas do Jira. Todas retornaram HTTP 503 porque a geração por IA estava desativada. Nenhuma geração nem apuração foi concluída. Não houve chamadas aos modelos nesse diagnóstico.
+A aplicação confirmou Jira, Confluence, IA e PostgreSQL sem configuração; não havia backend/.env nem variáveis dessas integrações no processo inspecionado. A conexão Atlassian da conversa funcionava, mas não fornece automaticamente credenciais à aplicação.
+Os casos BDD preparados na conversa são roteiros NÃO EXECUTADOS. Não conte como resultados de Gemini/Llama, aprovação por analista ou medição de tempo. A leitura prévia de casos históricos contamina uma avaliação cega realizada na mesma conversa; use novas tarefas ou geração isolada para a avaliação final.
+
+ORDEM DE TRABALHO
+1. Ler as fontes, os ajustes da banca e o código; conferir o que mudou desde este pacote.
+2. Iniciar a redação e a atualização dos diagramas imediatamente, enquanto verifica as condições da avaliação.
+3. Verificar a configuração existente sem imprimir segredos. Se faltar, pedir somente os dados/acessos realmente necessários ao autor. Não pedir chaves no chat nem reutilizar credenciais de finalidades diferentes.
+4. Preparar um piloto pequeno, com fontes e critérios registrados. As três tarefas anteriores estão identificadas nos arquivos locais privados descritos no README. Se não houver esses arquivos, selecionar outras no Jira autorizado conforme a E5. Não assumir que as anteriores já satisfazem todos os critérios.
+5. Gerar cenários seguindo REGRAS_GERACAO_BDD.md, sem ler os casos antigos como entrada. Consultar documentação somente na árvore Filterp (raiz 2756182023). Guardar separadamente o resultado dos modelos, a revisão humana e os testes executados.
+6. Para valores esperados, elaborar consultas de referência antes das gerações, obter conferência de analista e executar somente em homologação com usuário de leitura. Não usar o próprio consenso como gabarito. Não criar massa no banco corporativo sem escopo autorizado.
+7. Coletar o que for possível com a plataforma real. Preservar saídas inválidas, falhas, retentativas, tokens e tempos. Aceitação, qualidade e comparação de esforço exigem avaliadores humanos reais.
+8. Escrever Resultados e Discussão com base exclusivamente na evidência disponível. Se os dados científicos não existirem, apresentar resultados técnicos preliminares e a limitação de coleta, sem fingir conclusão experimental.
+9. Revisar referências, citações, tabelas, figuras, tempos verbais, números e concordância entre o código e o texto. Gerar DOCX e PDF e inspecionar a diagramação.
+
+CUIDADOS METODOLÓGICOS ESSENCIAIS
+- Valor apurado é obtido por consulta; valor validado corresponde à regra de negócio. Consenso não é prova de correção.
+- A troca de “verificados” por “apurados” no título foi proposta na E3, mas a decisão com o orientador estava pendente. Registrar a escolha, não fingir aprovação.
+- Amostra final planejada: 30 tarefas, 15 por área, mais 6 de calibração; quatro analistas, excluído o autor. O piloto de três tarefas não substitui esse desenho.
+- Comparar tempo com o procedimento atual da equipe, que já usa assistência de modelos. Não inventar baseline totalmente manual.
+- M9 e M11, quando usam a mesma população com consenso e referência, são complementares. Exibir denominadores e taxa de cobertura/abstenção. Não tratar como duas provas independentes.
+- Três provedores planejados não significam três provedores operacionais. Completar Claude ou declarar e justificar a mudança para duas famílias.
+- As consultas dos candidatos usam snapshots separados: REPEATABLE READ não torna automaticamente a massa idêntica entre conexões.
+- O normalizador compara a representação completa; o hash serve à rastreabilidade. Preserva duplicatas e relações entre células, distingue tipos e descarta ambiguidade excessiva.
+- Nulo, zero, resultado vazio, erro, limitação de linhas e falta de referência são situações distintas. Ausência de coleta não é métrica igual a zero.
+- Prompts, modelos, versões, preços, documentação e base precisam de identificação temporal. Não presumir que a documentação atual representa exatamente a versão histórica da tarefa.
+- Não publicar requisitos internos, dados de clientes, resultados completos do ERP, credenciais ou avaliações identificadas de funcionários.
+
+ENTREGA
+Salvar o artigo em tcc/artigo/ com a fonte editável, o DOCX e o PDF. Não sobrescrever as entregas E1–E5.
+Manter evidências internas fora do Git. Publicar somente conteúdo autorizado e desidentificado.
+Entregar também um resumo curto do que foi concluído, quais resultados foram efetivamente medidos e o que depende de participação/acesso externo.
+Nos commits, usar a identidade Git já configurada de Eduardo, sem trailers de coautoria do assistente. O autor autorizou subir este pacote ao repositório; qualquer publicação posterior deve respeitar o escopo e a confidencialidade dos novos arquivos.

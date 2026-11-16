@@ -1,0 +1,14 @@
+﻿ID;Métrica;O que mede;Como é coletada;Unidade;Valor esperado
+M1;Incidência de apuração;Proporção das tarefas do acervo que exigem valor esperado obtido no banco;Classificação manual de amostra aleatória de 100 tarefas do acervo;%;Descritiva (caracterização)
+M2;Tempo de elaboração;Tempo para produzir o caso de teste pronto para execução, no procedimento atual e com a plataforma;Cronometragem por sessão, registrada na planilha do Apêndice B;min por tarefa;Redução mediana ≥ 30%, significativa a 5%
+M3;Validade sintática;Proporção de arquivos de cenários aceitos pelo analisador Gherkin na primeira geração;Automática, pelo registro de execuções;%;≥ 90% (93,3% em Fonseca, Lima e Faria, 2025)
+M4;Aceitação dos cenários;Distribuição das decisões: aceito sem alteração, aceito com alteração menor, rejeitado;Ficha de avaliação (Apêndice A) com a rubrica do Quadro 4, dois analistas por tarefa;% de tarefas;≥ 60% aceitas, com ou sem alteração (68% em Ferreira et al., 2025)
+M5;Qualidade percebida;"Clareza, testabilidade, concisão e valor dos cenários (OLIVEIRA; MARCZAK; MORALLES, 2019)";Ficha de avaliação, escala de 1 a 5 por atributo;média (1–5);≥ 4,0 em cada atributo
+M6;Cobertura do caso de referência;"Proporção dos itens verificados no caso do analista que os cenários gerados também verificam; e itens adicionais válidos";Ficha de avaliação, item a item;% e contagem;≥ 70% de cobertura
+M7;Completude frente à documentação;Proporção dos comportamentos documentados da rotina cobertos pelos cenários;"Lista de comportamentos preparada antes da geração; comparação com e sem documentação";%;Superior à versão sem documentação
+M8;Concordância entre modelos;Distribuição dos desfechos: unânime, maioria, divergente e falha;Automática, pelo registro de execuções;% de apurações;Divergente + falha ≤ 25%
+M9;Acurácia do consenso;Proporção das apurações com valor de referência cujo resultado coincide com o da consulta de referência;Comparação dos conjuntos normalizados;%;≥ 80% e superior a M10
+M10;Acurácia individual;A mesma medida, para cada modelo isolado;Comparação dos conjuntos normalizados;% por modelo;Linha de base de M9
+M11;Falso acordo;Proporção das apurações com consenso em que o resultado consensuado diverge da referência;Comparação dos conjuntos normalizados;%;≤ 10%
+M12;Valores alterados na conferência;Proporção dos valores apurados que o analista corrige antes de executar o teste;Tela de revisão (REVISAO.valores_alterados);%;≤ 10%
+M13;Custo e tempo por apuração;Custo em tokens dos três modelos, convertido pela tabela de preços vigente, e tempo total;Automática, pelo registro de execuções;US$ e s;≤ US$ 0,10 e ≤ 60 s
