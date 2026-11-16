@@ -41,7 +41,7 @@ no navegador: **https://edukrause.github.io/PlataformaTestes/**
 
 ## Arquitetura
 
-![Arquitetura](docs/diagramas/arquitetura.png)
+![Arquitetura](tcc/artigo/figuras/figura-arquitetura.png)
 
 - **Interface web** (React): informa a tarefa, revisa cenários, valores e consultas, registra a decisão.
 - **Orquestração** (Java 21 / Spring Boot 3):
@@ -67,6 +67,7 @@ npx @mermaid-js/mermaid-cli -i docs/diagramas/arquitetura.mmd -o docs/diagramas/
 
 - [Backlog priorizado](docs/backlog.md), com a fatia vertical marcada.
 - [Etapas do TCC](tcc) entregues ao orientador (E1 a E5).
+- [Artigo, versão preliminar](tcc/artigo): DOCX, PDF, figuras, demonstração e [pendências](tcc/artigo/PENDENCIAS.md).
 - Fora do escopo: execução automatizada dos testes, automação de interface, geração de massa sintética e
   **qualquer escrita no banco do ERP**.
 

@@ -2,19 +2,21 @@
 erDiagram
     TAREFA ||--o{ EXECUCAO : "origina"
     EXECUCAO ||--|{ CENARIO : "produz"
+    EXECUCAO ||--o{ CHAMADA_MODELO : "audita"
     EXECUCAO ||--o{ APURACAO : "contém"
     CENARIO |o--o{ APURACAO : "recebe valor de"
     APURACAO ||--|{ CANDIDATO_SQL : "reúne"
-    EXECUCAO ||--o{ REVISAO : "é conferida em"
+    EXECUCAO ||--o| REVISAO : "decisão vigente"
+    EXECUCAO ||--o{ HISTORICO_REVISAO : "decisões anteriores"
+    EXECUCAO ||--o{ PUBLICACAO_JIRA : "publica"
 
     TAREFA {
         bigint id PK
-        varchar chave_jira UK
-        varchar area "ESTOQUE | VENDAS"
-        text requisito
+        varchar chave_jira
+        varchar origem "JIRA | MANUAL"
+        clob requisito
         varchar documentacao_ref
-        char hash_documentacao
-        timestamp coletada_em
+        varchar hash_documentacao
     }
     EXECUCAO {
         bigint id PK
@@ -23,44 +25,56 @@ erDiagram
         varchar status
         bigint tempo_total_ms
         decimal custo_total_usd
-        timestamp iniciada_em
     }
     CENARIO {
         bigint id PK
         bigint execucao_id FK
         varchar tipo "ALTERACAO | REGRESSAO"
-        text gherkin
+        clob gherkin
         boolean sintaxe_valida
+    }
+    CHAMADA_MODELO {
+        bigint id PK
+        bigint execucao_id FK
+        varchar provedor
+        varchar modelo
+        varchar finalidade "CENARIOS | SQL"
+        decimal temperatura
+        clob prompt_enviado
+        decimal custo_usd
     }
     APURACAO {
         bigint id PK
         bigint execucao_id FK
         bigint cenario_id FK
-        text pergunta
-        text subesquema
+        varchar origem "MANUAL | MODELOS"
         varchar desfecho "UNANIME | MAIORIA | DIVERGENTE | FALHA"
-        text resultado_referencia
+        clob resultado_referencia
     }
     CANDIDATO_SQL {
         bigint id PK
         bigint apuracao_id FK
         varchar provedor "CLAUDE | GEMINI | LLAMA"
-        varchar modelo
         int tentativa
-        text consulta
+        clob consulta
         varchar verificacao
-        char hash_resultado
-        int tokens_entrada
-        int tokens_saida
-        decimal custo_usd
-        bigint latencia_ms
+        varchar hash_resultado
     }
     REVISAO {
         bigint id PK
         bigint execucao_id FK
-        varchar analista
         varchar decisao "ACEITO | ACEITO_ALTERACAO | REJEITADO"
         int valores_alterados
         bigint tempo_revisao_s
-        text comentario
+    }
+    HISTORICO_REVISAO {
+        bigint id PK
+        bigint execucao_id FK
+        varchar decisao
+    }
+    PUBLICACAO_JIRA {
+        bigint id PK
+        bigint execucao_id FK
+        bigint revisao_id
+        varchar status
     }

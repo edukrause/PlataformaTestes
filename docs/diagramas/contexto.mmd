@@ -5,8 +5,8 @@ flowchart TB
     subgraph EMP["Rede interna da empresa"]
         direction TB
         PT["<b>PlataformaTestes</b><br/>executada localmente pelo analista"]
-        ERP["<b>ERP em homologação</b><br/>aplicação usada para executar os testes"]
-        DB[("MySQL de homologação<br/>≈ 125 tabelas")]
+        ERP["<b>ERP web em homologação</b><br/>aplicação usada para executar os testes"]
+        DB[("Banco MySQL de homologação")]
         ERP <-->|"leitura e escrita"| DB
         PT -->|"somente leitura · catálogo, EXPLAIN e SELECT"| DB
     end
@@ -21,5 +21,6 @@ flowchart TB
     AN -->|"informa a tarefa e confere a saída"| PT
     AN -->|"executa o teste"| ERP
     PT -->|"lê o requisito"| JIRA
+    PT -.->|"publicação opcional de cenários aprovados"| JIRA
     PT -->|"lê a documentação"| CONF
     PT -->|"apenas conteúdo filtrado; resultados nunca saem"| LLM

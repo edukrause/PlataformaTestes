@@ -1,0 +1,1070 @@
+{
+  "id": 1,
+  "tarefa": {
+    "id": 1,
+    "chaveJira": "DEMO-1",
+    "titulo": "Demonstração sintética",
+    "area": "VENDAS",
+    "requisito": "Relatório de vendas por período, sem pedidos cancelados nem excluídos.",
+    "documentacaoRef": null,
+    "coletadaEm": "2026-11-16T12:57:07.033339900Z",
+    "origem": "MANUAL"
+  },
+  "versaoPrompt": "cenarios-v2",
+  "status": "CONCLUIDA",
+  "etapa": "COMPOSICAO",
+  "exigeApuracao": true,
+  "tempoTotalMs": 930,
+  "custoTotalUsd": 0.0,
+  "iniciadaEm": "2026-11-16T12:57:07.033339900Z",
+  "cenarios": [
+    {
+      "id": 1,
+      "tipo": "ALTERACAO",
+      "titulo": "Q1 - Valor total vendido pela empresa 1 em outubro de 2026, sem pedidos cancelados ou excluídos",
+      "gherkin": "Dado que existem pedidos de outubro de 2026\nQuando consulto o relatório de vendas\nEntão vejo o valor apurado",
+      "resultadoEsperado": "Valor conforme a referência apurada\nValor de referência apurado: «A1».",
+      "sintaxeValida": true,
+      "execucaoTeste": null
+    },
+    {
+      "id": 2,
+      "tipo": "ALTERACAO",
+      "titulo": "Q2 - Quantidade de pedidos válidos por filial da empresa 1 em outubro de 2026",
+      "gherkin": "Dado que existem pedidos de outubro de 2026\nQuando consulto o relatório de vendas\nEntão vejo o valor apurado",
+      "resultadoEsperado": "Valor conforme a referência apurada\nValor de referência apurado: «A2».",
+      "sintaxeValida": true,
+      "execucaoTeste": null
+    },
+    {
+      "id": 3,
+      "tipo": "ALTERACAO",
+      "titulo": "Q3 - Quantidade vendida do produto 10 pela empresa 1 em outubro de 2026, sem pedidos cancelados ou excluídos",
+      "gherkin": "Dado que existem pedidos de outubro de 2026\nQuando consulto o relatório de vendas\nEntão vejo o valor apurado",
+      "resultadoEsperado": "Valor conforme a referência apurada\nValor de referência apurado: «A3».",
+      "sintaxeValida": true,
+      "execucaoTeste": null
+    },
+    {
+      "id": 4,
+      "tipo": "ALTERACAO",
+      "titulo": "Q4 - Valor médio por pedido válido da empresa 1 em outubro de 2026",
+      "gherkin": "Dado que existem pedidos de outubro de 2026\nQuando consulto o relatório de vendas\nEntão vejo o valor apurado",
+      "resultadoEsperado": "Valor conforme a referência apurada\nApuração A4: DIVERGENTE; conferir manualmente.",
+      "sintaxeValida": true,
+      "execucaoTeste": null
+    },
+    {
+      "id": 5,
+      "tipo": "ALTERACAO",
+      "titulo": "Q5 - Valor total vendido pela filial 2 da empresa 1 em outubro de 2026",
+      "gherkin": "Dado que existem pedidos de outubro de 2026\nQuando consulto o relatório de vendas\nEntão vejo o valor apurado",
+      "resultadoEsperado": "Valor conforme a referência apurada\nApuração A5: FALHA; conferir manualmente.",
+      "sintaxeValida": true,
+      "execucaoTeste": null
+    }
+  ],
+  "apuracoes": [
+    {
+      "id": 1,
+      "cenarioId": 1,
+      "pergunta": "Valor total vendido pela empresa 1 em outubro de 2026, sem pedidos cancelados ou excluídos",
+      "desfecho": "MAIORIA",
+      "origem": "MANUAL",
+      "tempoTotalMs": 286,
+      "valorCorrigido": null,
+      "preservarOrdem": false,
+      "subesquema": [
+        "demo_erp.pedido",
+        "demo_erp.pedido_item",
+        "demo_erp.produto"
+      ],
+      "catalogo": {
+        "tabelas": [
+          {
+            "schema": "demo_erp",
+            "nome": "pedido",
+            "colunas": [
+              {
+                "nome": "id",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "empresa",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "filial",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "emissao",
+                "tipo": "date",
+                "anulavel": false
+              },
+              {
+                "nome": "situacao",
+                "tipo": "char",
+                "anulavel": false
+              },
+              {
+                "nome": "excluido",
+                "tipo": "tinyint",
+                "anulavel": false
+              }
+            ]
+          },
+          {
+            "schema": "demo_erp",
+            "nome": "pedido_item",
+            "colunas": [
+              {
+                "nome": "pedido_id",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "produto_id",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "quantidade",
+                "tipo": "decimal",
+                "anulavel": false
+              },
+              {
+                "nome": "valor_unitario",
+                "tipo": "decimal",
+                "anulavel": false
+              }
+            ]
+          },
+          {
+            "schema": "demo_erp",
+            "nome": "produto",
+            "colunas": [
+              {
+                "nome": "id",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "descricao",
+                "tipo": "varchar",
+                "anulavel": false
+              },
+              {
+                "nome": "ativo",
+                "tipo": "tinyint",
+                "anulavel": false
+              }
+            ]
+          }
+        ],
+        "relacionamentos": [
+          {
+            "origem": "demo_erp.pedido_item",
+            "colunaOrigem": "pedido_id",
+            "destino": "demo_erp.pedido",
+            "colunaDestino": "id"
+          },
+          {
+            "origem": "demo_erp.pedido_item",
+            "colunaOrigem": "produto_id",
+            "destino": "demo_erp.produto",
+            "colunaDestino": "id"
+          }
+        ]
+      },
+      "resultadoReferencia": {
+        "colunas": [
+          "total"
+        ],
+        "linhas": [
+          [
+            88.5
+          ]
+        ]
+      },
+      "candidatos": [
+        {
+          "id": 1,
+          "provedor": "CLAUDE",
+          "modelo": "INFORMADO_MANUALMENTE",
+          "tentativa": 1,
+          "consulta": "SELECT SUM(i.quantidade * i.valor_unitario) AS total FROM demo_erp.pedido p JOIN demo_erp.pedido_item i ON i.pedido_id = p.id WHERE p.empresa = 1 AND p.emissao BETWEEN '2026-10-01' AND '2026-10-31' AND p.situacao = 'N' AND p.excluido = 0",
+          "verificacao": "VALIDO",
+          "hashResultado": "4895e63e664cbdd014f61aaa0a003a0051e64dcc7d67b4f9d37f1b5278ad4e1b",
+          "mensagemErro": null,
+          "tokensEntrada": 0,
+          "tokensSaida": 0,
+          "custoUsd": 0,
+          "latenciaMs": 31,
+          "resultado": {
+            "colunas": [
+              "total"
+            ],
+            "linhas": [
+              [
+                88.5
+              ]
+            ]
+          }
+        },
+        {
+          "id": 2,
+          "provedor": "GEMINI",
+          "modelo": "INFORMADO_MANUALMENTE",
+          "tentativa": 1,
+          "consulta": "SELECT SUM(quantidade * valor_unitario) AS valor FROM demo_erp.pedido_item WHERE pedido_id IN (SELECT id FROM demo_erp.pedido WHERE empresa = 1 AND situacao = 'N' AND excluido = 0 AND emissao >= '2026-10-01' AND emissao < '2026-11-01')",
+          "verificacao": "VALIDO",
+          "hashResultado": "4895e63e664cbdd014f61aaa0a003a0051e64dcc7d67b4f9d37f1b5278ad4e1b",
+          "mensagemErro": null,
+          "tokensEntrada": 0,
+          "tokensSaida": 0,
+          "custoUsd": 0,
+          "latenciaMs": 31,
+          "resultado": {
+            "colunas": [
+              "valor"
+            ],
+            "linhas": [
+              [
+                88.5
+              ]
+            ]
+          }
+        },
+        {
+          "id": 3,
+          "provedor": "LLAMA",
+          "modelo": "INFORMADO_MANUALMENTE",
+          "tentativa": 1,
+          "consulta": "SELECT SUM(i.quantidade * i.valor_unitario) FROM demo_erp.pedido p JOIN demo_erp.pedido_item i ON i.pedido_id = p.id WHERE p.empresa = 1 AND p.emissao BETWEEN '2026-10-01' AND '2026-10-31' AND p.situacao = 'N'",
+          "verificacao": "VALIDO",
+          "hashResultado": "3a014e5cdc8dbdd44b679eec86b94e72dd4bb87476bd97c26f0c2e8ad9e77b84",
+          "mensagemErro": null,
+          "tokensEntrada": 0,
+          "tokensSaida": 0,
+          "custoUsd": 0,
+          "latenciaMs": 31,
+          "resultado": {
+            "colunas": [
+              "SUM(i.quantidade * i.valor_unitario)"
+            ],
+            "linhas": [
+              [
+                94.5
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "cenarioId": 2,
+      "pergunta": "Quantidade de pedidos válidos por filial da empresa 1 em outubro de 2026",
+      "desfecho": "UNANIME",
+      "origem": "MANUAL",
+      "tempoTotalMs": 139,
+      "valorCorrigido": null,
+      "preservarOrdem": false,
+      "subesquema": [
+        "demo_erp.pedido",
+        "demo_erp.pedido_item",
+        "demo_erp.produto"
+      ],
+      "catalogo": {
+        "tabelas": [
+          {
+            "schema": "demo_erp",
+            "nome": "pedido",
+            "colunas": [
+              {
+                "nome": "id",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "empresa",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "filial",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "emissao",
+                "tipo": "date",
+                "anulavel": false
+              },
+              {
+                "nome": "situacao",
+                "tipo": "char",
+                "anulavel": false
+              },
+              {
+                "nome": "excluido",
+                "tipo": "tinyint",
+                "anulavel": false
+              }
+            ]
+          },
+          {
+            "schema": "demo_erp",
+            "nome": "pedido_item",
+            "colunas": [
+              {
+                "nome": "pedido_id",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "produto_id",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "quantidade",
+                "tipo": "decimal",
+                "anulavel": false
+              },
+              {
+                "nome": "valor_unitario",
+                "tipo": "decimal",
+                "anulavel": false
+              }
+            ]
+          },
+          {
+            "schema": "demo_erp",
+            "nome": "produto",
+            "colunas": [
+              {
+                "nome": "id",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "descricao",
+                "tipo": "varchar",
+                "anulavel": false
+              },
+              {
+                "nome": "ativo",
+                "tipo": "tinyint",
+                "anulavel": false
+              }
+            ]
+          }
+        ],
+        "relacionamentos": [
+          {
+            "origem": "demo_erp.pedido_item",
+            "colunaOrigem": "pedido_id",
+            "destino": "demo_erp.pedido",
+            "colunaDestino": "id"
+          },
+          {
+            "origem": "demo_erp.pedido_item",
+            "colunaOrigem": "produto_id",
+            "destino": "demo_erp.produto",
+            "colunaDestino": "id"
+          }
+        ]
+      },
+      "resultadoReferencia": {
+        "colunas": [
+          "filial",
+          "pedidos"
+        ],
+        "linhas": [
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            2
+          ]
+        ]
+      },
+      "candidatos": [
+        {
+          "id": 4,
+          "provedor": "CLAUDE",
+          "modelo": "INFORMADO_MANUALMENTE",
+          "tentativa": 1,
+          "consulta": "SELECT p.filial, COUNT(*) AS pedidos FROM demo_erp.pedido p WHERE p.empresa = 1 AND p.emissao BETWEEN '2026-10-01' AND '2026-10-31' AND p.situacao = 'N' AND p.excluido = 0 GROUP BY p.filial ORDER BY p.filial",
+          "verificacao": "VALIDO",
+          "hashResultado": "a3cea43455cbee4b30d6d9f8b4a9ecad9d05a967f717fa9762dc00161775a0ee",
+          "mensagemErro": null,
+          "tokensEntrada": 0,
+          "tokensSaida": 0,
+          "custoUsd": 0,
+          "latenciaMs": 30,
+          "resultado": {
+            "colunas": [
+              "filial",
+              "pedidos"
+            ],
+            "linhas": [
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                2
+              ]
+            ]
+          }
+        },
+        {
+          "id": 5,
+          "provedor": "GEMINI",
+          "modelo": "INFORMADO_MANUALMENTE",
+          "tentativa": 1,
+          "consulta": "SELECT COUNT(p.id) AS qtd, p.filial AS filial FROM demo_erp.pedido p WHERE p.empresa = 1 AND p.emissao BETWEEN '2026-10-01' AND '2026-10-31' AND p.situacao = 'N' AND p.excluido = 0 GROUP BY p.filial ORDER BY qtd DESC, filial DESC",
+          "verificacao": "VALIDO",
+          "hashResultado": "a3cea43455cbee4b30d6d9f8b4a9ecad9d05a967f717fa9762dc00161775a0ee",
+          "mensagemErro": null,
+          "tokensEntrada": 0,
+          "tokensSaida": 0,
+          "custoUsd": 0,
+          "latenciaMs": 31,
+          "resultado": {
+            "colunas": [
+              "qtd",
+              "filial"
+            ],
+            "linhas": [
+              [
+                2,
+                2
+              ],
+              [
+                2,
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "id": 6,
+          "provedor": "LLAMA",
+          "modelo": "INFORMADO_MANUALMENTE",
+          "tentativa": 1,
+          "consulta": "SELECT filial, COUNT(DISTINCT id) FROM demo_erp.pedido WHERE empresa = 1 AND situacao <> 'C' AND excluido = 0 AND YEAR(emissao) = 2026 AND MONTH(emissao) = 10 GROUP BY filial",
+          "verificacao": "VALIDO",
+          "hashResultado": "a3cea43455cbee4b30d6d9f8b4a9ecad9d05a967f717fa9762dc00161775a0ee",
+          "mensagemErro": null,
+          "tokensEntrada": 0,
+          "tokensSaida": 0,
+          "custoUsd": 0,
+          "latenciaMs": 38,
+          "resultado": {
+            "colunas": [
+              "filial",
+              "COUNT(DISTINCT id)"
+            ],
+            "linhas": [
+              [
+                1,
+                2
+              ],
+              [
+                2,
+                2
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "cenarioId": 3,
+      "pergunta": "Quantidade vendida do produto 10 pela empresa 1 em outubro de 2026, sem pedidos cancelados ou excluídos",
+      "desfecho": "MAIORIA",
+      "origem": "MANUAL",
+      "tempoTotalMs": 125,
+      "valorCorrigido": null,
+      "preservarOrdem": false,
+      "subesquema": [
+        "demo_erp.pedido",
+        "demo_erp.pedido_item",
+        "demo_erp.produto"
+      ],
+      "catalogo": {
+        "tabelas": [
+          {
+            "schema": "demo_erp",
+            "nome": "pedido",
+            "colunas": [
+              {
+                "nome": "id",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "empresa",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "filial",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "emissao",
+                "tipo": "date",
+                "anulavel": false
+              },
+              {
+                "nome": "situacao",
+                "tipo": "char",
+                "anulavel": false
+              },
+              {
+                "nome": "excluido",
+                "tipo": "tinyint",
+                "anulavel": false
+              }
+            ]
+          },
+          {
+            "schema": "demo_erp",
+            "nome": "pedido_item",
+            "colunas": [
+              {
+                "nome": "pedido_id",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "produto_id",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "quantidade",
+                "tipo": "decimal",
+                "anulavel": false
+              },
+              {
+                "nome": "valor_unitario",
+                "tipo": "decimal",
+                "anulavel": false
+              }
+            ]
+          },
+          {
+            "schema": "demo_erp",
+            "nome": "produto",
+            "colunas": [
+              {
+                "nome": "id",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "descricao",
+                "tipo": "varchar",
+                "anulavel": false
+              },
+              {
+                "nome": "ativo",
+                "tipo": "tinyint",
+                "anulavel": false
+              }
+            ]
+          }
+        ],
+        "relacionamentos": [
+          {
+            "origem": "demo_erp.pedido_item",
+            "colunaOrigem": "pedido_id",
+            "destino": "demo_erp.pedido",
+            "colunaDestino": "id"
+          },
+          {
+            "origem": "demo_erp.pedido_item",
+            "colunaOrigem": "produto_id",
+            "destino": "demo_erp.produto",
+            "colunaDestino": "id"
+          }
+        ]
+      },
+      "resultadoReferencia": {
+        "colunas": [
+          "SUM(i.quantidade)"
+        ],
+        "linhas": [
+          [
+            180.0
+          ]
+        ]
+      },
+      "candidatos": [
+        {
+          "id": 7,
+          "provedor": "CLAUDE",
+          "modelo": "INFORMADO_MANUALMENTE",
+          "tentativa": 1,
+          "consulta": "SELECT SUM(i.quantidade) FROM demo_erp.pedido p JOIN demo_erp.pedido_item i ON i.pedido_id = p.id WHERE p.empresa = 1 AND p.emissao BETWEEN '2026-10-01' AND '2026-10-31' AND p.excluido = 0 AND i.produto_id = 10",
+          "verificacao": "VALIDO",
+          "hashResultado": "fe463904d79175cc601a70577de971c523d989c0a56094ba4ec21db69aa8c4d2",
+          "mensagemErro": null,
+          "tokensEntrada": 0,
+          "tokensSaida": 0,
+          "custoUsd": 0,
+          "latenciaMs": 31,
+          "resultado": {
+            "colunas": [
+              "SUM(i.quantidade)"
+            ],
+            "linhas": [
+              [
+                180.0
+              ]
+            ]
+          }
+        },
+        {
+          "id": 8,
+          "provedor": "GEMINI",
+          "modelo": "INFORMADO_MANUALMENTE",
+          "tentativa": 1,
+          "consulta": "SELECT SUM(quantidade) AS qtd FROM demo_erp.pedido_item WHERE produto_id = 10 AND pedido_id IN (SELECT id FROM demo_erp.pedido WHERE empresa = 1 AND excluido = 0 AND emissao BETWEEN '2026-10-01' AND '2026-10-31')",
+          "verificacao": "VALIDO",
+          "hashResultado": "fe463904d79175cc601a70577de971c523d989c0a56094ba4ec21db69aa8c4d2",
+          "mensagemErro": null,
+          "tokensEntrada": 0,
+          "tokensSaida": 0,
+          "custoUsd": 0,
+          "latenciaMs": 28,
+          "resultado": {
+            "colunas": [
+              "qtd"
+            ],
+            "linhas": [
+              [
+                180.0
+              ]
+            ]
+          }
+        },
+        {
+          "id": 9,
+          "provedor": "LLAMA",
+          "modelo": "INFORMADO_MANUALMENTE",
+          "tentativa": 1,
+          "consulta": "SELECT SUM(i.quantidade) AS quantidade FROM demo_erp.pedido p JOIN demo_erp.pedido_item i ON i.pedido_id = p.id WHERE p.empresa = 1 AND p.emissao BETWEEN '2026-10-01' AND '2026-10-31' AND p.situacao = 'N' AND p.excluido = 0 AND i.produto_id = 10",
+          "verificacao": "VALIDO",
+          "hashResultado": "54b8e346e53b6d5f5e07021105132b1a68e0f4d6fb71ac270a4b6d038ebe4e85",
+          "mensagemErro": null,
+          "tokensEntrada": 0,
+          "tokensSaida": 0,
+          "custoUsd": 0,
+          "latenciaMs": 31,
+          "resultado": {
+            "colunas": [
+              "quantidade"
+            ],
+            "linhas": [
+              [
+                140.0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "cenarioId": 4,
+      "pergunta": "Valor médio por pedido válido da empresa 1 em outubro de 2026",
+      "desfecho": "DIVERGENTE",
+      "origem": "MANUAL",
+      "tempoTotalMs": 147,
+      "valorCorrigido": null,
+      "preservarOrdem": false,
+      "subesquema": [
+        "demo_erp.pedido",
+        "demo_erp.pedido_item",
+        "demo_erp.produto"
+      ],
+      "catalogo": {
+        "tabelas": [
+          {
+            "schema": "demo_erp",
+            "nome": "pedido",
+            "colunas": [
+              {
+                "nome": "id",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "empresa",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "filial",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "emissao",
+                "tipo": "date",
+                "anulavel": false
+              },
+              {
+                "nome": "situacao",
+                "tipo": "char",
+                "anulavel": false
+              },
+              {
+                "nome": "excluido",
+                "tipo": "tinyint",
+                "anulavel": false
+              }
+            ]
+          },
+          {
+            "schema": "demo_erp",
+            "nome": "pedido_item",
+            "colunas": [
+              {
+                "nome": "pedido_id",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "produto_id",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "quantidade",
+                "tipo": "decimal",
+                "anulavel": false
+              },
+              {
+                "nome": "valor_unitario",
+                "tipo": "decimal",
+                "anulavel": false
+              }
+            ]
+          },
+          {
+            "schema": "demo_erp",
+            "nome": "produto",
+            "colunas": [
+              {
+                "nome": "id",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "descricao",
+                "tipo": "varchar",
+                "anulavel": false
+              },
+              {
+                "nome": "ativo",
+                "tipo": "tinyint",
+                "anulavel": false
+              }
+            ]
+          }
+        ],
+        "relacionamentos": [
+          {
+            "origem": "demo_erp.pedido_item",
+            "colunaOrigem": "pedido_id",
+            "destino": "demo_erp.pedido",
+            "colunaDestino": "id"
+          },
+          {
+            "origem": "demo_erp.pedido_item",
+            "colunaOrigem": "produto_id",
+            "destino": "demo_erp.produto",
+            "colunaDestino": "id"
+          }
+        ]
+      },
+      "resultadoReferencia": null,
+      "candidatos": [
+        {
+          "id": 10,
+          "provedor": "CLAUDE",
+          "modelo": "INFORMADO_MANUALMENTE",
+          "tentativa": 1,
+          "consulta": "SELECT AVG(i.quantidade * i.valor_unitario) FROM demo_erp.pedido p JOIN demo_erp.pedido_item i ON i.pedido_id = p.id WHERE p.empresa = 1 AND p.emissao BETWEEN '2026-10-01' AND '2026-10-31' AND p.situacao = 'N' AND p.excluido = 0",
+          "verificacao": "VALIDO",
+          "hashResultado": "71950141e6ca043a9aecb2e6c980e2e3116402ca88f3d5a27f2eaee353a9fe36",
+          "mensagemErro": null,
+          "tokensEntrada": 0,
+          "tokensSaida": 0,
+          "custoUsd": 0,
+          "latenciaMs": 34,
+          "resultado": {
+            "colunas": [
+              "AVG(i.quantidade * i.valor_unitario)"
+            ],
+            "linhas": [
+              [
+                12.642857142
+              ]
+            ]
+          }
+        },
+        {
+          "id": 11,
+          "provedor": "GEMINI",
+          "modelo": "INFORMADO_MANUALMENTE",
+          "tentativa": 1,
+          "consulta": "SELECT SUM(i.quantidade * i.valor_unitario) / COUNT(DISTINCT p.id) AS media FROM demo_erp.pedido p JOIN demo_erp.pedido_item i ON i.pedido_id = p.id WHERE p.empresa = 1 AND p.emissao BETWEEN '2026-10-01' AND '2026-10-31' AND p.situacao = 'N' AND p.excluido = 0",
+          "verificacao": "VALIDO",
+          "hashResultado": "cfd53594f6fb1c9fc79503bca850679ceb15be827e163b8de712449f2dfd63fc",
+          "mensagemErro": null,
+          "tokensEntrada": 0,
+          "tokensSaida": 0,
+          "custoUsd": 0,
+          "latenciaMs": 39,
+          "resultado": {
+            "colunas": [
+              "media"
+            ],
+            "linhas": [
+              [
+                22.125
+              ]
+            ]
+          }
+        },
+        {
+          "id": 12,
+          "provedor": "LLAMA",
+          "modelo": "INFORMADO_MANUALMENTE",
+          "tentativa": 1,
+          "consulta": "SELECT AVG(i.valor_unitario) FROM demo_erp.pedido p JOIN demo_erp.pedido_item i ON i.pedido_id = p.id WHERE p.empresa = 1 AND p.emissao BETWEEN '2026-10-01' AND '2026-10-31' AND p.situacao = 'N' AND p.excluido = 0",
+          "verificacao": "VALIDO",
+          "hashResultado": "0ad9063ad4bb852e4772ae12a12d608fc04baa4c9f77ca0a55e423e4c35cc97d",
+          "mensagemErro": null,
+          "tokensEntrada": 0,
+          "tokensSaida": 0,
+          "custoUsd": 0,
+          "latenciaMs": 29,
+          "resultado": {
+            "colunas": [
+              "AVG(i.valor_unitario)"
+            ],
+            "linhas": [
+              [
+                0.357143
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "cenarioId": 5,
+      "pergunta": "Valor total vendido pela filial 2 da empresa 1 em outubro de 2026",
+      "desfecho": "FALHA",
+      "origem": "MANUAL",
+      "tempoTotalMs": 88,
+      "valorCorrigido": null,
+      "preservarOrdem": false,
+      "subesquema": [
+        "demo_erp.pedido",
+        "demo_erp.pedido_item",
+        "demo_erp.produto"
+      ],
+      "catalogo": {
+        "tabelas": [
+          {
+            "schema": "demo_erp",
+            "nome": "pedido",
+            "colunas": [
+              {
+                "nome": "id",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "empresa",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "filial",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "emissao",
+                "tipo": "date",
+                "anulavel": false
+              },
+              {
+                "nome": "situacao",
+                "tipo": "char",
+                "anulavel": false
+              },
+              {
+                "nome": "excluido",
+                "tipo": "tinyint",
+                "anulavel": false
+              }
+            ]
+          },
+          {
+            "schema": "demo_erp",
+            "nome": "pedido_item",
+            "colunas": [
+              {
+                "nome": "pedido_id",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "produto_id",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "quantidade",
+                "tipo": "decimal",
+                "anulavel": false
+              },
+              {
+                "nome": "valor_unitario",
+                "tipo": "decimal",
+                "anulavel": false
+              }
+            ]
+          },
+          {
+            "schema": "demo_erp",
+            "nome": "produto",
+            "colunas": [
+              {
+                "nome": "id",
+                "tipo": "int",
+                "anulavel": false
+              },
+              {
+                "nome": "descricao",
+                "tipo": "varchar",
+                "anulavel": false
+              },
+              {
+                "nome": "ativo",
+                "tipo": "tinyint",
+                "anulavel": false
+              }
+            ]
+          }
+        ],
+        "relacionamentos": [
+          {
+            "origem": "demo_erp.pedido_item",
+            "colunaOrigem": "pedido_id",
+            "destino": "demo_erp.pedido",
+            "colunaDestino": "id"
+          },
+          {
+            "origem": "demo_erp.pedido_item",
+            "colunaOrigem": "produto_id",
+            "destino": "demo_erp.produto",
+            "colunaDestino": "id"
+          }
+        ]
+      },
+      "resultadoReferencia": null,
+      "candidatos": [
+        {
+          "id": 13,
+          "provedor": "CLAUDE",
+          "modelo": "INFORMADO_MANUALMENTE",
+          "tentativa": 1,
+          "consulta": "DELETE FROM demo_erp.pedido WHERE situacao = 'C'",
+          "verificacao": "REJEITADO_SINTAXE",
+          "hashResultado": null,
+          "mensagemErro": "REJEITADO_SINTAXE",
+          "tokensEntrada": 0,
+          "tokensSaida": 0,
+          "custoUsd": 0,
+          "latenciaMs": 0,
+          "resultado": null
+        },
+        {
+          "id": 14,
+          "provedor": "GEMINI",
+          "modelo": "INFORMADO_MANUALMENTE",
+          "tentativa": 1,
+          "consulta": "SELECT SUM(i.quantidade * i.valor_unitario) FROM demo_erp.pedido p JOIN demo_erp.pedido_item i ON i.pedido_id = p.id WHERE p.empresa = 1 AND p.filial = 2 AND p.situacao = 'N' AND p.excluido = 0 AND p.emissao BETWEEN '2025-10-01' AND '2025-10-31' GROUP BY p.filial",
+          "verificacao": "VAZIO",
+          "hashResultado": null,
+          "mensagemErro": "VAZIO",
+          "tokensEntrada": 0,
+          "tokensSaida": 0,
+          "custoUsd": 0,
+          "latenciaMs": 31,
+          "resultado": null
+        },
+        {
+          "id": 15,
+          "provedor": "LLAMA",
+          "modelo": "INFORMADO_MANUALMENTE",
+          "tentativa": 1,
+          "consulta": "SELECT SUM(i.quantidade * i.valor_unitario) FROM demo_erp.pedido p JOIN demo_erp.pedido_item i ON i.pedido_id = p.id WHERE p.empresa = 1 AND p.emissao BETWEEN '2026-10-01' AND '2026-10-31' AND p.situacao = 'N' AND p.excluido = 0 AND p.filial = 2",
+          "verificacao": "VALIDO",
+          "hashResultado": "cee106c604913ee6dfbb16f92a05f19e7e5fda89ce8f0e9f7d117b01b73c3177",
+          "mensagemErro": null,
+          "tokensEntrada": 0,
+          "tokensSaida": 0,
+          "custoUsd": 0,
+          "latenciaMs": 23,
+          "resultado": {
+            "colunas": [
+              "SUM(i.quantidade * i.valor_unitario)"
+            ],
+            "linhas": [
+              [
+                11.0
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "pontosAtencao": [
+    {
+      "tipo": "DOCUMENTACAO",
+      "texto": "Geração baseada apenas no requisito. Documentação funcional não solicitada."
+    },
+    {
+      "tipo": "MASSA",
+      "texto": "Consultas informadas manualmente; a origem nos provedores não foi autenticada. Consenso exige conferência da regra de negócio e não garante cobertura de todos os valores do cenário."
+    }
+  ],
+  "revisao": null,
+  "mensagemErro": null,
+  "apuracaoDisponivel": true
+}

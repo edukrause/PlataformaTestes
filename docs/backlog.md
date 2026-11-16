@@ -3,13 +3,12 @@
 As horas e marcos abaixo são as estimativas originais, não uma previsão de esforço restante.
 Implementado significa código e testes existentes; validação com contas reais depende das credenciais e do ambiente.
 
-O fluxo do MVP está implementado com Gemini e Llama/Groq. **A integração com Claude permanece pendente**,
-conforme pedido do Eduardo. O terceiro provedor de B13 e a unanimidade automática dependem dessa integração.
+O fluxo do MVP está implementado com as três famílias planejadas: Claude, Gemini e Llama/Groq.
+A leitura do banco do ERP funciona em MySQL e em PostgreSQL. Nenhuma conta real de provedor foi homologada.
 Sem IA, a entrada manual permite criar cenários, apurar consultas, revisar e exportar resultados.
 
-PostgreSQL é a fonte consultada, H2 é o histórico local. Nesta sessão, 88 testes passaram, 8 PostgreSQL reais
-foram ignorados; os clientes externos foram exercitados com HTTP simulado. O JAR único foi gerado e iniciou
-localmente com H2 em memória: interface, criação manual, conferência e CSV foram verificados.
+MySQL ou PostgreSQL é a fonte consultada, H2 é o histórico local. Em 16/11/2026, 121 testes passaram, incluindo
+os de banco real em MySQL 8.4 e PostgreSQL 16; os clientes externos foram exercitados com HTTP simulado.
 Consulte docs/CONTINUIDADE.md para validação e commits. Não considerar as integrações já homologadas em produção.
 
 | ID | Item | h | Prioridade | Marco | FV | Status |
@@ -18,19 +17,19 @@ Consulte docs/CONTINUIDADE.md para validação e commits. Não considerar as int
 | B02 | Configuração de credenciais por variáveis de ambiente e perfil local | 1 | MVP | E6 | ● | implementado; variáveis, .env opcional e configuração sem segredos na API |
 | B03 | Base local H2 com migração das seis tabelas da plataforma | 3 | MVP | E6 | ● | implementado; Flyway V1–V7 e auditoria preservada |
 | B04 | Cliente do Jira: obter o requisito pela chave da tarefa | 3 | MVP | E6 | ● | implementado e testado por HTTP simulado; validar credenciais/workflow reais |
-| B05 | Gateway de modelos com adaptador do Claude e registro de tokens, custo e latência | 4 | MVP | E6 | ● | Claude pendente; gateway e auditoria disponíveis para Gemini/Llama |
-| B06 | Conexão PostgreSQL somente leitura com limite de tempo e de linhas | 2 | MVP | E6 | ● | implementado; testes reais existentes, nova execução PostgreSQL pendente |
+| B05 | Gateway de modelos com adaptador do Claude e registro de tokens, custo e latência | 4 | MVP | E6 | ● | implementado; Claude, Gemini e Groq com tokens, custo, latência e temperatura; sem conta real homologada |
+| B06 | Conexão MySQL/PostgreSQL somente leitura com limite de tempo e de linhas | 2 | MVP | E6 | ● | implementado nos dois dialetos; testes reais executados em 16/11/2026 |
 | B07 | Verificador, camada 1: análise sintática que admite apenas SELECT | 3 | MVP | E6 | ● | implementado; AST, CTEs e funções permitidas |
-| B08 | Geração de cenário Gherkin a partir do requisito (um modelo) | 4 | MVP | E6 | ● | implementado com Gemini/Llama; Claude permanece pendente |
+| B08 | Geração de cenário Gherkin a partir do requisito (um modelo) | 4 | MVP | E6 | ● | implementado com Claude, Gemini ou Llama |
 | B09 | Geração de SQL por um modelo, com o esquema da área informado integralmente | 4 | MVP | E6 | ● | implementado; catálogo, domínio, SQL gerado e apuração persistida |
 | B10 | Compositor: cenário com valor preenchido e consulta anexada | 2 | MVP | E6 | ● | implementado; marcador de referência nos passos/resultado e SQL no detalhe |
 | B11 | Tela: informar a tarefa e visualizar o resultado | 4 | MVP | E6 | ● | implementado; Jira, entrada manual, apuração e revisão pela interface |
 | B12 | Adaptadores do Gemini e do Llama (Groq) no gateway | 4 | MVP | E7 |  | implementado; Gemini API e Llama/Groq, tokens/custos e erros |
-| B13 | Geração paralela pelos três modelos e nova tentativa com a mensagem de erro | 6 | MVP | E7 |  | implementado com duas famílias e uma retentativa; terceiro provedor depende de Claude |
+| B13 | Geração paralela pelos três modelos e nova tentativa com a mensagem de erro | 6 | MVP | E7 |  | implementado com três famílias e uma retentativa (categoria da falha, sem mensagem interna) |
 | B14 | Verificador, camadas 2 e 3: EXPLAIN e execução; descarte de erro e de vazio | 4 | MVP | E7 |  | implementado e integrado à apuração |
 | B15 | Normalizador: ordenação, arredondamento, nulos e datas | 6 | MVP | E7 |  | implementado, testado e integrado |
 | B16 | Motor de consenso e classificação do desfecho | 4 | MVP | E7 |  | implementado; um voto final por família, descartes e hashes persistidos |
-| B17 | Extração do esquema pelo INFORMATION_SCHEMA e grafo de chaves estrangeiras | 6 | MVP | E7 |  | implementado; INFORMATION_SCHEMA + pg_catalog; teste real novo pendente |
+| B17 | Extração do esquema pelo INFORMATION_SCHEMA e grafo de chaves estrangeiras | 6 | MVP | E7 |  | implementado; MySQL (KEY_COLUMN_USAGE) e PostgreSQL (pg_catalog), com testes reais |
 | B18 | Amostrador de valores restrito à lista de colunas permitidas | 5 | MVP | E7 |  | implementado; lista permitida, limites e envio opcional aos modelos |
 | B19 | Filtro de saída no gateway: pseudonimização de dados pessoais no requisito, na documentação e nas mensagens de erro | 5 | MVP | E7 |  | implementado para padrões e termos configurados em todo o contexto; não identifica todo dado confidencial |
 | B20 | Cliente do Confluence: obter a página da rotina e convertê-la em texto | 6 | MVP | E8 |  | implementado; Confluence Cloud/v2 e REST anterior/v1, versão/hash/texto guardados |
@@ -53,8 +52,8 @@ Fatia vertical original: 34 h · MVP original: 125 h · Desejáveis originais: 2
 ## O que depende do ambiente
 
 1. Configurar URLs, credenciais, modelos/preços e regras reais do domínio em backend/.env ou variáveis.
-2. Executar os testes PostgreSQL em banco descartável; verificar a CI 16/18 após o push.
+2. Verificar a CI (PostgreSQL 16/18 e MySQL 8.4) após o push.
 3. Validar leitura Jira/Confluence e gerações com Gemini/Llama nas contas reais.
 4. Conferir os IDs de situações/transições e testar a publicação opcional no projeto escolhido.
-5. Integrar Claude ao final e executar a avaliação com três famílias.
+5. Executar a avaliação com três famílias (ver tcc/artigo/PENDENCIAS.md).
 6. B33 continua uma evolução futura fora do MVP, não uma pendência desta entrega.
