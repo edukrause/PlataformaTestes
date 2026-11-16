@@ -124,7 +124,7 @@ function BoasVindas({ onEscolher }: { onEscolher: (texto: string) => void }) {
       <h1 className="mt-4 text-2xl font-bold text-enfase">Olá! Qual tarefa vamos testar?</h1>
       <p className="mt-2 max-w-xl text-texto">
         {modoApi === 'http'
-          ? 'Me passe a chave de uma tarefa do Jira para gerar os cenários em Gherkin. Nesta primeira versão, uso o requisito; a documentação e a apuração no banco ainda estão pendentes.'
+          ? 'Me passe a chave de uma tarefa do Jira para gerar os cenários em Gherkin. Uso o requisito e, se você pedir, a documentação da rotina; quando o cenário depende de valores, apuro o esperado no banco.'
           : 'Me passe a chave de uma tarefa do Jira. Eu leio o requisito e a documentação da rotina, escrevo os cenários em Gherkin e apuro os valores esperados no banco de homologação. Depois a gente conversa sobre o resultado.'}
       </p>
       <div className="mt-6 flex flex-wrap gap-2">

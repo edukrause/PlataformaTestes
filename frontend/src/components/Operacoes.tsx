@@ -92,7 +92,7 @@ export function PainelApuracao({ execucao, onSalvo }: { execucao: Execucao; onSa
       </select></Campo>
       <label className="flex gap-2 text-sm"><input type="checkbox" checked={ordem} onChange={(e) => setOrdem(e.target.checked)} disabled={ocupado} />A ordem das linhas faz parte do resultado</label>
       <Campo titulo="Consultas"><select className={classe} value={automatico ? 'auto' : 'manual'} onChange={(e) => setAutomatico(e.target.value === 'auto')} disabled={ocupado}>
-        <option value="manual">Informar consultas manualmente</option><option value="auto">Gerar com Gemini e Llama</option>
+        <option value="manual">Informar consultas manualmente</option><option value="auto">Gerar com os provedores habilitados</option>
       </select></Campo>
       {!automatico && <>
         <p className="text-xs text-texto-sec">Informe uma consulta final por provedor. O nome identifica a origem declarada; a plataforma não autentica essa origem.</p>
