@@ -9,7 +9,11 @@ public interface ModeloGateway {
 
     record Resposta(String texto, String modelo, int tokensEntrada, int tokensSaida, long latenciaMs,
                     BigDecimal custoUsd, String promptEnviado, Map<String, String> correspondencias,
-                    String provedor, boolean completa) {
+                    String provedor, boolean completa, BigDecimal temperatura) {
+        public Resposta(String texto, String modelo, int tokensEntrada, int tokensSaida, long latenciaMs,
+                BigDecimal custoUsd, String promptEnviado, Map<String, String> correspondencias, String provedor, boolean completa) {
+            this(texto, modelo, tokensEntrada, tokensSaida, latenciaMs, custoUsd, promptEnviado, correspondencias, provedor, completa, null);
+        }
         public Resposta(String texto, String modelo, int tokensEntrada, int tokensSaida, long latenciaMs,
                 BigDecimal custoUsd, String promptEnviado, Map<String, String> correspondencias) {
             this(texto, modelo, tokensEntrada, tokensSaida, latenciaMs, custoUsd, promptEnviado, correspondencias, "CLAUDE", true);

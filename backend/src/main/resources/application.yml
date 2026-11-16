@@ -61,6 +61,8 @@ plataforma:
     modo: ${PLATAFORMA_IA_MODO:desativada}
   modelos:
     max-tokens: ${MODELOS_MAX_TOKENS:4096}
+    # Temperatura enviada aos três provedores (0 a 1). Vazio omite o parâmetro. Fica gravada em cada chamada.
+    temperatura: ${MODELOS_TEMPERATURA:0}
     provedores:
       CLAUDE:
         habilitado: ${CLAUDE_HABILITADO:false}

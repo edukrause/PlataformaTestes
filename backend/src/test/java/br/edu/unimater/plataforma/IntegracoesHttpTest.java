@@ -24,13 +24,13 @@ class IntegracoesHttpTest {
     }
     private ModelosExternos modelos(Transporte t) {
         var c=new ModelosProperties.Config(true,"chave-teste","modelo-fixado","1","2");
-        var cliente=new ModelosExternos(new ModelosProperties(Map.of(Provedor.CLAUDE,c,Provedor.GEMINI,c,Provedor.LLAMA,c),4096),new FiltroSaida("Nome Privado"),RestClient.builder());
+        var cliente=new ModelosExternos(new ModelosProperties(Map.of(Provedor.CLAUDE,c,Provedor.GEMINI,c,Provedor.LLAMA,c),4096,BigDecimal.ZERO),new FiltroSaida("Nome Privado"),RestClient.builder());
         ReflectionTestUtils.setField(cliente,"http",t.http());return cliente;
     }
     @Test void geminiPseudonimizaCalculaTokensDeRaciocinioECusto() {
         var t=transporte();var cliente=modelos(t);
         t.server().expect(requestTo("https://generativelanguage.googleapis.com/v1beta/models/modelo-fixado:generateContent"))
-                .andExpect(method(HttpMethod.POST)).andExpect(header("x-goog-api-key","chave-teste"))
+                .andExpect(method(HttpMethod.POST)).andExpect(header("x-goog-api-key","chave-teste")).andExpect(jsonPath("$.generationConfig.temperature").value(0))
                 .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("123.456.789-00"))))
                 .andRespond(withSuccess("""
                 {"candidates":[{"content":{"parts":[{"thought":true,"text":"interno"},{"text":"{\"consulta\":\"SELECT 1\"}"}]},"finishReason":"STOP"}],
@@ -45,7 +45,7 @@ class IntegracoesHttpTest {
     @Test void groqUsaBearerEPreservaTruncamentoParaAuditoria() {
         var t=transporte();var cliente=modelos(t);
         t.server().expect(requestTo("https://api.groq.com/openai/v1/chat/completions"))
-                .andExpect(header("Authorization","Bearer chave-teste")).andExpect(jsonPath("$.response_format.type").value("json_object"))
+                .andExpect(header("Authorization","Bearer chave-teste")).andExpect(jsonPath("$.response_format.type").value("json_object")).andExpect(jsonPath("$.temperature").value(0))
                 .andRespond(withSuccess("""
                 {"model":"llama-real","choices":[{"message":{"content":"{}"},"finish_reason":"length"}],"usage":{"prompt_tokens":3,"completion_tokens":4}}
                 """,MediaType.APPLICATION_JSON));
@@ -63,7 +63,7 @@ class IntegracoesHttpTest {
         var t=transporte();var cliente=modelos(t);
         t.server().expect(requestTo("https://api.anthropic.com/v1/messages")).andExpect(method(HttpMethod.POST))
                 .andExpect(header("x-api-key","chave-teste")).andExpect(header("anthropic-version","2023-06-01"))
-                .andExpect(jsonPath("$.model").value("modelo-fixado")).andExpect(jsonPath("$.max_tokens").value(4096))
+                .andExpect(jsonPath("$.model").value("modelo-fixado")).andExpect(jsonPath("$.max_tokens").value(4096)).andExpect(jsonPath("$.temperature").value(0))
                 .andExpect(jsonPath("$.system").value(org.hamcrest.Matchers.containsString("Responda somente JSON")))
                 .andExpect(jsonPath("$.messages[0].role").value("user"))
                 .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Nome Privado"))))
@@ -75,7 +75,7 @@ class IntegracoesHttpTest {
         assertThat(resposta.texto()).isEqualTo("{\"consulta\":\"SELECT 1\"}");assertThat(resposta.provedor()).isEqualTo("CLAUDE");
         assertThat(resposta.modelo()).isEqualTo("claude-real");assertThat(resposta.tokensEntrada()).isEqualTo(10);assertThat(resposta.tokensSaida()).isEqualTo(5);
         assertThat(resposta.custoUsd()).isEqualByComparingTo("0.000020");assertThat(resposta.completa()).isTrue();
-        assertThat(resposta.promptEnviado()).doesNotContain("Nome Privado");t.server().verify();
+        assertThat(resposta.promptEnviado()).doesNotContain("Nome Privado");assertThat(resposta.temperatura()).isEqualByComparingTo("0");t.server().verify();
     }
     @Test void claudeMarcaTruncamentoEExigeContagemDeTokens() {
         var t=transporte();var cliente=modelos(t);
@@ -92,7 +92,7 @@ class IntegracoesHttpTest {
     @Test void provedorDesabilitadoOuSemChaveNaoEChamado() {
         var desabilitado=new ModelosProperties.Config(false,"chave","modelo","1","2");
         var semChave=new ModelosProperties.Config(true,"","modelo","1","2");
-        var cliente=new ModelosExternos(new ModelosProperties(Map.of(Provedor.CLAUDE,desabilitado,Provedor.GEMINI,semChave),4096),new FiltroSaida(""),RestClient.builder());
+        var cliente=new ModelosExternos(new ModelosProperties(Map.of(Provedor.CLAUDE,desabilitado,Provedor.GEMINI,semChave),4096,null),new FiltroSaida(""),RestClient.builder());
         assertThat(cliente.disponiveis()).containsExactly(Provedor.GEMINI);
         assertThatThrownBy(()->cliente.validar(Provedor.CLAUDE)).isInstanceOf(ErroApi.class).hasMessageContaining("CLAUDE");
         assertThatThrownBy(()->cliente.validar(Provedor.GEMINI)).isInstanceOf(ErroApi.class);
