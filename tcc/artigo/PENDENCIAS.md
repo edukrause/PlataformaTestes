@@ -20,7 +20,7 @@ demonstração. Nenhum resultado experimental foi inventado; as métricas M1–M
 ## Editoriais
 
 - Extensão: corpo com cerca de 6.500 palavras (com tabelas e legendas), dentro de 6.000–8.000. Em Arial 12 e
-  espaçamento 1,5, o corpo vai até a página 23 e o PDF completo tem 29 (referências e apêndice). A faixa de 15–20 páginas
+  espaçamento 1,5, o corpo vai até a página 23 e o PDF completo tem 27 (referências e apêndice). A faixa de 15–20 páginas
   não é compatível com 6.000 palavras nesse formato; fonte e espaçamento não foram reduzidos. Decidir com o orientador.
 - O DOCX foi gerado por `gerar_docx.py` sobre o template institucional e o PDF pelo LibreOffice 7+;
   abrir uma vez no Microsoft Word para conferir quebras antes da entrega.
@@ -38,7 +38,7 @@ Ficam em aberto, fora do texto do artigo:
   `demonstracao/medicoes.csv` e dois gráficos (Figuras 4 e 5). Sem comparação com linha de base, que depende da coleta com analistas.
 - **E9** (24/11): slides (15), roteiro da demonstração e próximos passos do TCC II em `tcc/banca/`. Faltam o vídeo
   da demonstração e o ensaio cronometrado, que são do autor.
-- O escopo indica como ideal 15 a 25 referências e 15 a 20 páginas; o artigo tem 43 referências, todas citadas, e 29 páginas. Decidir com o orientador se corta.
+- Referências: reduzidas de 43 para 25 em 16/11/2026 (ideal do escopo: 15 a 25), todas citadas. Páginas: 27 no total (corpo até a 23), contra 15 a 20 do escopo; não cabe em 20 sem ficar abaixo das 6.000 palavras mínimas. Decidir com o orientador.
 
 ## Fora do Git
 
