@@ -27,6 +27,17 @@ demonstração. Nenhum resultado experimental foi inventado; as métricas M1–M
 - Quando houver dados: reescrever as Seções 4.4 e 5, o resumo (resultados) e as Considerações Finais, mantendo
   denominadores, cobertura do consenso e abstenções; atualizar o Quadro 6.
 
+## Escopo do orientador (github.com/JoviMazzochin/orientacao-tccs)
+
+Conferido em 16/11/2026. Os templates são os mesmos de `tcc/continuidade/modelos`; a estrutura do artigo
+(resumo, Seções 1 a 6, quadro comparativo com "Este trabalho", enfoque, etapas, validação) atende ao escopo.
+Ficam em aberto, fora do texto do artigo:
+
+- **E7**: marcar a versão candidata no Git (tag, por exemplo `v1.0-rc`) e declarar o escopo congelado.
+- **E8**: dados brutos, tabelas, 2 a 4 gráficos e comparação com a linha de base; dependem da coleta (itens 1 a 6 acima).
+- **E9** (24/11): slides (12 a 15), roteiro e vídeo da demonstração, ensaio cronometrado e próximos passos do TCC II com estimativa de esforço.
+- O escopo indica como ideal 15 a 25 referências e 15 a 20 páginas; o artigo tem 43 referências, todas citadas, e 28 páginas. Decidir com o orientador se corta.
+
 ## Fora do Git
 
 Dados internos (tarefas, requisitos, resultados do ERP, avaliações identificadas) ficam em pasta privada.

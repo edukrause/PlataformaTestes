@@ -72,13 +72,13 @@ Os três trabalhos seguintes levam a geração ao ambiente industrial. Paduraru,
 
 Os dois últimos tocam o domínio e os dados. Garg e Sharma (2023) aplicam IA generativa à modelagem de testes de ERP, sem avaliação empírica. Mendoza et al. (2024) geram dados de teste a partir de cenários BDD, caminho inverso ao proposto: produzem massa sintética, enquanto este trabalho parte da massa existente e apura o valor que o sistema deve apresentar sobre ela.
 
-Na revisão realizada, que não esgota a literatura, não foi encontrado trabalho que confronte a saída dos modelos com os dados armazenados para apurar o valor esperado de cenários de teste. A proposta articula, assim, a geração de cenários e a tradução para SQL, e prevê medir inclusive quando o consenso engana.
+Na revisão realizada, que não esgota a literatura, não foi encontrado trabalho que confronte a saída dos modelos com os dados armazenados para apurar o valor esperado de cenários de teste. Diferentemente dos trabalhos apresentados, este trabalho submete o resultado esperado dos cenários aos dados armazenados, articulando a geração de cenários e a tradução para SQL, e prevê medir inclusive quando o consenso engana.
 
 # 3 Metodologia
 
 ## 3.1 Tipo de Pesquisa e Método
 
-Trata-se de pesquisa aplicada, de natureza exploratória e abordagem quali-quantitativa, conduzida segundo a Design Science Research, adequada a trabalhos cujo resultado é a construção e a avaliação de um artefato (HEVNER et al., 2004). Seguem-se as etapas de Peffers et al. (2007): identificação do problema, definição dos objetivos, projeto e desenvolvimento, demonstração, avaliação e comunicação. Esta versão cobre as quatro primeiras etapas e a avaliação técnica; a avaliação com usuários, descrita na Seção 3.6, ainda não foi executada.
+Trata-se de pesquisa aplicada, de natureza exploratória e abordagem quali-quantitativa, conduzida segundo a Design Science Research, adequada a trabalhos cujo resultado é a construção e a avaliação de um artefato (HEVNER et al., 2004). Seguem-se as etapas de Peffers et al. (2007): identificação do problema, definição dos objetivos, projeto e desenvolvimento, demonstração, avaliação e comunicação. Esta versão cobre as quatro primeiras etapas e a avaliação técnica; a avaliação com usuários, descrita na Seção 3.6, ainda não foi executada. Entre os enfoques admitidos pelo curso, adota-se o de aplicação prática real, em empresa, com avaliação experimental por métricas definidas previamente.
 
 ## 3.2 Contexto do Sistema Estudado
 
@@ -95,6 +95,8 @@ A plataforma é um monólito modular empacotado em um único executável, operad
 FIG|figuras/figura-arquitetura.png|Figura 2 – Arquitetura da plataforma|Fonte: elaborado pelo autor (2026).
 
 A interface é o ponto de contato do analista: recebe a chave da tarefa, apresenta os cenários com os valores apurados e as consultas que os originaram e registra a decisão de conferência. O coletor de contexto obtém o requisito no Jira e, quando solicitado, a documentação da rotina no Confluence, guardando referência, versão, texto e *hash* da página, pois a documentação muda com o tempo. O Módulo 1 redige os cenários em um contrato JSON e os submete ao analisador Gherkin, com uma regeneração quando inválidos. O Módulo 2 é acionado quando um cenário pede valor apurado. Os dois módulos acessam os modelos exclusivamente pelo gateway, que oferece uma interface única com um adaptador por provedor, aplica o filtro de saída e registra tokens, custo, latência, modelo e temperatura de cada chamada. O compositor reúne cenário, referência ao valor e consulta, e o registro grava tudo em uma base H2 local, separada da base do ERP, que alimenta a auditoria e as métricas.
+
+O desenvolvimento ocorreu em quatro incrementos, registrados no histórico do repositório: modelagem, backlog e protótipo da interface, em outubro de 2026; orquestração, leitura do banco com verificação das consultas, normalização e consenso, em 6 de novembro; catálogo, amostragem autorizada, fluxo completo de geração, apuração e revisão e empacotamento em executável único, em 7 de novembro; e integração da terceira família de modelos, leitura de MySQL e registro da temperatura, em 16 de novembro.
 
 ## 3.4 Fluxo de Apuração e Decisão por Consenso
 
