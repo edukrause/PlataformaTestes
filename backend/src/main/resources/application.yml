@@ -36,17 +36,6 @@ plataforma:
     max-amostras: ${ERP_AMOSTRA_MAX_VALORES:5}
     max-tabelas: ${ERP_CATALOGO_MAX_TABELAS:12}
     profundidade: ${ERP_CATALOGO_PROFUNDIDADE:1}
-  erp:
-    # SGBD do banco consultado: POSTGRESQL ou MYSQL. Define o gateway de leitura, o catálogo e o SQL pedido aos modelos.
-    dialeto: ${ERP_DIALETO:POSTGRESQL}
-  mysql:
-    habilitado: ${ERP_MYSQL_HABILITADO:false}
-    url: ${ERP_MYSQL_URL:}
-    usuario: ${ERP_MYSQL_USUARIO:}
-    senha: ${ERP_MYSQL_SENHA:}
-    timeout-segundos: ${ERP_MYSQL_TIMEOUT_SEGUNDOS:10}
-    max-linhas: ${ERP_MYSQL_MAX_LINHAS:1000}
-    max-caracteres: ${ERP_MYSQL_MAX_CARACTERES:1000000}
   postgres:
     habilitado: ${ERP_POSTGRES_HABILITADO:false}
     url: ${ERP_POSTGRES_URL:}
@@ -57,19 +46,11 @@ plataforma:
     max-caracteres: ${ERP_POSTGRES_MAX_CARACTERES:1000000}
   ia:
     provedor: ${PLATAFORMA_IA_PROVEDOR:GEMINI}
-    # desativada: só entrada manual; externa: gera com o provedor indicado acima (CLAUDE, GEMINI ou LLAMA).
+    # Integração com o provedor adiada. api mantém o adaptador existente como opção explícita.
     modo: ${PLATAFORMA_IA_MODO:desativada}
   modelos:
     max-tokens: ${MODELOS_MAX_TOKENS:4096}
-    # Temperatura enviada aos três provedores (0 a 1). Vazio omite o parâmetro. Fica gravada em cada chamada.
-    temperatura: ${MODELOS_TEMPERATURA:0}
     provedores:
-      CLAUDE:
-        habilitado: ${CLAUDE_HABILITADO:false}
-        chave: ${ANTHROPIC_API_KEY:}
-        modelo: ${ANTHROPIC_MODEL:}
-        preco-entrada: ${ANTHROPIC_INPUT_PRICE:}
-        preco-saida: ${ANTHROPIC_OUTPUT_PRICE:}
       GEMINI:
         habilitado: ${GEMINI_HABILITADO:false}
         chave: ${GEMINI_API_KEY:}
@@ -93,6 +74,13 @@ plataforma:
     auth-mode: ${JIRA_AUTH_MODE:basic}
     # Campo customizado opcional que identifica a área. Sem ele, o classificador usa o requisito.
     area-field: ${JIRA_AREA_FIELD:}
+  claude:
+    api-key: ${ANTHROPIC_API_KEY:}
+    model: ${ANTHROPIC_MODEL:}
+    max-tokens: ${ANTHROPIC_MAX_TOKENS:4096}
+    # Preços da versão escolhida, em USD por milhão de tokens. Não presumir preço zero.
+    input-price: ${ANTHROPIC_INPUT_PRICE:}
+    output-price: ${ANTHROPIC_OUTPUT_PRICE:}
   privacy:
     # Nomes conhecidos separados por ;. O filtro por padrões não identifica nomes arbitrários.
     sensitive-terms: ${SENSITIVE_TERMS:}

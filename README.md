@@ -20,8 +20,8 @@ como referência quando ao menos dois resultados coincidem. A conferência do an
 2. A plataforma busca o requisito da tarefa e, se pedido, a documentação da rotina no Confluence.
 3. O **Módulo 1** gera os cenários de teste em Gherkin e valida a sintaxe.
 4. Para cada valor que o cenário precisa conferir, o **Módulo 2** pede consultas SQL independentes.
-   Os adaptadores de Claude, Gemini e Llama/Groq estão implementados.
-5. As consultas passam por um verificador e são executadas no banco de homologação (MySQL ou PostgreSQL), só leitura, com limite
+   Gemini e Llama/Groq estão implementados; Claude permanece pendente para completar as três famílias planejadas.
+5. As consultas passam por um verificador e são executadas no PostgreSQL de homologação, só leitura, com limite
    de tempo e de linhas.
 6. Se pelo menos dois dos três resultados coincidirem, o valor vira a referência do cenário; se não, o
    cenário fica marcado como "valor a apurar".
@@ -41,7 +41,7 @@ no navegador: **https://edukrause.github.io/PlataformaTestes/**
 
 ## Arquitetura
 
-![Arquitetura](tcc/artigo/figuras/figura-arquitetura.png)
+![Arquitetura](docs/diagramas/arquitetura.png)
 
 - **Interface web** (React): informa a tarefa, revisa cenários, valores e consultas, registra a decisão.
 - **Orquestração** (Java 21 / Spring Boot 3):
@@ -52,12 +52,12 @@ no navegador: **https://edukrause.github.io/PlataformaTestes/**
   - gateway de modelos com um adaptador por provedor;
   - compositor de saída e registro de execuções.
 - **Base local** (H2 em arquivo) para auditoria e métricas.
-- **Banco de homologação do ERP** (MySQL ou PostgreSQL) acessado só com usuário somente leitura, com limite de tempo e de linhas.
+- **PostgreSQL de homologação** acessado só com usuário somente leitura, com limite de tempo e de linhas.
 
 Os diagramas ficam em [`docs/diagramas`](docs/diagramas). Os arquivos `.mmd` são a fonte, e os `.svg` e `.png`
 são gerados a partir deles.
-As entregas acadêmicas E1–E5 registram o planejamento original. A implementação lê MySQL e PostgreSQL,
-conforme a documentação de [MySQL](backend/docs/mysql.md) e [PostgreSQL](backend/docs/postgresql.md).
+Os diagramas e as entregas acadêmicas E1–E5 registram o planejamento original com MySQL;
+a implementação atual usa PostgreSQL, conforme a [documentação do módulo](backend/docs/postgresql.md).
 
 ```bash
 npx @mermaid-js/mermaid-cli -i docs/diagramas/arquitetura.mmd -o docs/diagramas/arquitetura.svg -b white
@@ -67,16 +67,15 @@ npx @mermaid-js/mermaid-cli -i docs/diagramas/arquitetura.mmd -o docs/diagramas/
 
 - [Backlog priorizado](docs/backlog.md), com a fatia vertical marcada.
 - [Etapas do TCC](tcc) entregues ao orientador (E1 a E5).
-- [Artigo, versão preliminar](tcc/artigo): DOCX, PDF, figuras, demonstração e [pendências](tcc/artigo/PENDENCIAS.md).
 - Fora do escopo: execução automatizada dos testes, automação de interface, geração de massa sintética e
   **qualquer escrita no banco do ERP**.
 
 ## Como executar
 
 O aplicativo local inclui interface e backend no mesmo JAR. É possível criar execuções e informar consultas
-manualmente sem IA, ou gerar cenários e SQL com Claude, Gemini e Llama/Groq após configurar as integrações.
-Estão implementados Jira, Confluence, catálogo MySQL/PostgreSQL, apuração, consenso, correções com histórico,
-lote, exportação CSV e publicação opcional dos cenários aprovados no Jira.
+manualmente sem IA, ou gerar cenários e SQL com Gemini/Llama após configurar as integrações.
+Estão implementados Jira, Confluence, catálogo PostgreSQL, apuração, consenso, correções com histórico,
+lote, exportação CSV e publicação opcional dos cenários aprovados no Jira. Claude permanece pendente.
 Implementação e testes simulados não substituem a validação com as credenciais e regras reais do seu ambiente.
 
 Para construir tudo, use `scripts/build.ps1` no Windows ou `sh scripts/build.sh` em Linux/macOS,

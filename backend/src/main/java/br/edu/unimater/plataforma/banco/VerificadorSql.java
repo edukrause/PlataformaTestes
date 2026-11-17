@@ -7,8 +7,6 @@ import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.select.*;
 import net.sf.jsqlparser.util.TablesNamesFinder;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /** Subconjunto conservador de SELECT. Permissões do banco e transação READ ONLY são obrigatórias. */
@@ -19,20 +17,15 @@ public class VerificadorSql {
             "SET", "RESET", "LOCK", "FOR", "EXPLAIN", "ANALYZE", "VACUUM", "REINDEX");
     private static final Set<String> FUNCOES = Set.of("SUM", "COUNT", "AVG", "MIN", "MAX", "ROUND", "ABS",
             "CEIL", "CEILING", "FLOOR", "COALESCE", "NULLIF", "GREATEST", "LEAST", "CAST", "EXTRACT",
-            "UPPER", "LOWER", "LENGTH", "CHAR_LENGTH",
+            "DATE_TRUNC", "DATE_PART", "TO_CHAR", "TO_DATE", "UPPER", "LOWER", "LENGTH", "CHAR_LENGTH",
             "TRIM", "LTRIM", "RTRIM", "SUBSTRING", "REPLACE", "CONCAT", "CONCAT_WS", "LEFT", "RIGHT",
-            "ROW_NUMBER", "RANK", "DENSE_RANK", "LAG", "LEAD", "FIRST_VALUE", "LAST_VALUE");
+            "ROW_NUMBER", "RANK", "DENSE_RANK", "LAG", "LEAD", "FIRST_VALUE", "LAST_VALUE", "GENERATE_SERIES");
     private static final Set<String> GRAMATICA = Set.of("SELECT", "FROM", "WHERE", "HAVING", "IN", "EXISTS",
             "NOT", "AS", "ON", "OVER", "PARTITION", "FILTER", "WITHIN", "WITH", "DISTINCT", "ALL",
             "UNION", "INTERSECT", "EXCEPT", "GROUP", "ORDER", "BY", "VALUES", "WHEN", "AND", "OR");
     private static final Set<String> TIPOS = Set.of("NUMERIC", "DECIMAL", "VARCHAR", "CHAR", "CHARACTER",
             "TIMESTAMP", "TIME", "INTERVAL");
-    private static final Pattern TOKEN = Pattern.compile("'(?:''|[^'])*'|\"(?:\"\"|[^\"])*\"|`(?:``|[^`])*`|[A-Za-z_][A-Za-z0-9_$]*|::|\\S");
-    private final Dialeto dialeto;
-
-    public VerificadorSql() { this(Dialeto.POSTGRESQL); }
-    @Autowired
-    public VerificadorSql(@Value("${plataforma.erp.dialeto:POSTGRESQL}") Dialeto dialeto) { this.dialeto = dialeto; }
+    private static final Pattern TOKEN = Pattern.compile("'(?:''|[^'])*'|\"(?:\"\"|[^\"])*\"|[A-Za-z_][A-Za-z0-9_$]*|::|\\S");
 
     public String validar(String consulta) {
         if (consulta == null || consulta.isBlank() || consulta.length() > 20000)
@@ -55,10 +48,10 @@ public class VerificadorSql {
         for (int i = 0; i < tokens.size(); i++) {
             String raw = tokens.get(i);
             if (raw.startsWith("'")) continue;
-            String token = raw.replace("\"", "").replace("`", "").toUpperCase(Locale.ROOT);
+            String token = raw.replace("\"", "").toUpperCase(Locale.ROOT);
             if (PROIBIDOS.contains(token) || raw.equals("$") || raw.equals("?") || raw.startsWith("$$")) rejeitar();
             if (i + 1 < tokens.size() && tokens.get(i + 1).equals("(") && token.matches("[A-Z_][A-Z0-9_$]*")) {
-                if (!FUNCOES.contains(token) && !dialeto.funcoes().contains(token) && !GRAMATICA.contains(token)
+                if (!FUNCOES.contains(token) && !GRAMATICA.contains(token)
                         && !(TIPOS.contains(token) && i > 0 && Set.of("AS", "::").contains(tokens.get(i - 1).toUpperCase(Locale.ROOT))))
                     rejeitar();
                 if (i > 0 && tokens.get(i - 1).equals(".")

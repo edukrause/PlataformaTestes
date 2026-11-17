@@ -1,37 +1,42 @@
-%%{init: {"theme":"neutral","flowchart":{"curve":"basis","nodeSpacing":30,"rankSpacing":55,"padding":10,"wrappingWidth":280},"themeVariables":{"fontFamily":"Arial","fontSize":"16px"}}}%%
-flowchart LR
+%%{init: {"theme":"neutral","flowchart":{"curve":"linear","nodeSpacing":26,"rankSpacing":42,"padding":10,"wrappingWidth":300},"themeVariables":{"fontFamily":"Arial","fontSize":"16px"}}}%%
+flowchart TB
     AN(["Analista de qualidade"])
 
     subgraph LOCAL["Artefato executável único · execução local na rede interna"]
         direction TB
         UI["<b>Interface web · React</b><br/>informa a tarefa · revisa cenários, valores e consultas · registra a decisão"]
-        CTX["<b>Coletor de contexto</b><br/>requisito + documentação da rotina"]
-        M1["<b>Módulo 1 · Geração de cenários</b><br/>contrato JSON · analisador Gherkin · uma regeneração"]
-        M2["<b>Módulo 2 · Apuração de valores</b><br/>subesquema · amostrador · SQL por família · verificador (AST, EXPLAIN, execução) · normalizador · consenso"]
-        GW["<b>Gateway de modelos</b><br/>adaptadores Claude · Gemini · Llama/Groq<br/>filtro de saída · tokens, custo, latência"]
-        CMP["<b>Compositor e registro</b><br/>cenário + referência ao valor + consulta"]
-        DBL[("Base local H2<br/>auditoria, revisões e métricas")]
-        UI --> CTX
-        CTX --> M1
-        CTX --> M2
-        M1 --> CMP
-        M2 --> CMP
-        M1 -.-> GW
-        M2 -.-> GW
-        CMP --> UI
-        CMP --> DBL
+
+        subgraph ORQ["Camada de orquestração · Java / Spring Boot"]
+            direction TB
+            CTX["<b>Coletor de contexto</b><br/>requisito + documentação da rotina"]
+            M1["<b>Módulo 1 · Geração de cenários</b><br/>gerador de cenários<br/>validador Gherkin"]
+            M2["<b>Módulo 2 · Apuração de valores</b><br/>classificador · seletor de subesquema · amostrador · gerador SQL (×3) · verificador em camadas · normalizador · motor de consenso"]
+            GW["<b>Gateway de modelos</b><br/>interface única · três adaptadores · filtro de saída"]
+            CMP["<b>Compositor de saída e registro de execuções</b><br/>cenário + valores + consulta anexada"]
+            CTX --> M1
+            CTX --> M2
+            M1 -.-> GW
+            M2 -.-> GW
+            M1 --> CMP
+            M2 --> CMP
+        end
+
+        DBL[("Base local · H2 em arquivo")]
     end
 
     subgraph EXT["Sistemas externos"]
-        direction TB
-        JIRA[["Jira · requisito"]]
-        CONF[["Confluence · documentação"]]
-        LLM[["Anthropic · Google · Groq"]]
-        ERP[("Banco de homologação do ERP<br/>MySQL ou PostgreSQL · só SELECT")]
+        direction LR
+        JIRA[["Jira<br/>requisito da tarefa"]]
+        CONF[["Confluence<br/>documentação funcional"]]
+        LLM[["Provedores de modelos<br/>Anthropic · Google · Groq"]]
+        ERP[("MySQL · homologação do ERP<br/>usuário somente leitura")]
     end
 
     AN <--> UI
-    CTX -->|"REST, leitura"| JIRA
-    CTX -->|"REST, leitura"| CONF
+    UI <-->|"REST / JSON"| CTX
+    CMP --> UI
+    CMP --> DBL
+    CTX -->|"REST"| JIRA
+    CTX -->|"REST"| CONF
     GW -->|"HTTPS"| LLM
-    M2 -->|"catálogo · EXPLAIN · SELECT somente leitura"| ERP
+    M2 -->|"catálogo · EXPLAIN · SELECT com limite de tempo e linhas"| ERP

@@ -113,19 +113,6 @@ class PlataformaCompletaTest {
         verify(modelos,never()).gerar(eq(Provedor.CLAUDE),anyString(),anyString());
         verify(banco,never()).consultar(startsWith("DELETE"));
     }
-    @Test void tresFamiliasConcordantesProduzemUnanimidade()throws Exception {
-        String geracao=CENARIOS.replace("\"exigeApuracao\":false","\"exigeApuracao\":true")
-                .replace("\"resultadoEsperado\":\"Saldo conforme os movimentos\"","\"resultadoEsperado\":\"Saldo «VALOR_APURADO»\",\"perguntaApuracao\":\"Saldo estoque da empresa 1 filial 2\"");
-        when(modelo.gerar(anyString(),anyString())).thenReturn(resposta(geracao,"CLAUDE"));
-        when(modelos.disponiveis()).thenReturn(List.of(Provedor.CLAUDE,Provedor.GEMINI,Provedor.LLAMA));
-        for(var p:Provedor.values())
-            when(modelos.gerar(eq(p),anyString(),anyString())).thenReturn(resposta("{\"consulta\":\"SELECT saldo FROM public.estoque\"}",p.name()));
-        long id=gerar(false);
-        mvc.perform(get("/api/execucoes/{id}",id)).andExpect(jsonPath("$.status").value("CONCLUIDA"))
-                .andExpect(jsonPath("$.apuracoes[0].desfecho").value("UNANIME"))
-                .andExpect(jsonPath("$.apuracoes[0].candidatos.length()").value(3));
-        assertThat(db.queryForObject("SELECT COUNT(DISTINCT provedor) FROM chamada_modelo WHERE execucao_id=? AND finalidade='SQL'",Integer.class,id)).isEqualTo(3);
-    }
     @Test void entradaManualNaoChamaJiraNemIaEValidaGherkin()throws Exception {
         String pedido="{\"chaveJira\":\"MAN-1\",\"titulo\":\"Caso manual\",\"requisito\":\"Requisito fornecido\",\"geracao\":"+CENARIOS+"}";
         var json=mvc.perform(post("/api/execucoes/manuais").contentType("application/json").content(pedido)).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();

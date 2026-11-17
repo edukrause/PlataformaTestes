@@ -22,7 +22,6 @@ public class CatalogoService {
     private final ConsultaBancoGateway banco;
     private final CatalogoProperties config;
     private final long ttlMs;
-    private final Dialeto dialeto;
     private record CacheCatalogo(Catalogo valor,long expira) {}
     private record CacheAmostra(Resultado valor,long expira) {}
     private CacheCatalogo cache;
@@ -31,14 +30,10 @@ public class CatalogoService {
     public CatalogoService(ConsultaBancoGateway banco, CatalogoProperties config) {
         this(banco,config,0);
     }
-    public CatalogoService(ConsultaBancoGateway banco,CatalogoProperties config,int ttl) {
-        this(banco,config,ttl,Dialeto.POSTGRESQL);
-    }
     @Autowired
-    public CatalogoService(ConsultaBancoGateway banco,CatalogoProperties config,@Value("${plataforma.catalogo.cache-segundos:60}") int ttl,
-            @Value("${plataforma.erp.dialeto:POSTGRESQL}") Dialeto dialeto) {
+    public CatalogoService(ConsultaBancoGateway banco,CatalogoProperties config,@Value("${plataforma.catalogo.cache-segundos:60}") int ttl) {
         if(ttl<0||ttl>3600)throw new IllegalArgumentException("Cache do catálogo deve estar entre 0 e 3600 segundos.");
-        this.banco=banco;this.config=config;this.ttlMs=ttl*1000L;this.dialeto=dialeto;
+        this.banco=banco;this.config=config;this.ttlMs=ttl*1000L;
     }
 
     public synchronized void invalidar() { cache=null;amostras.clear(); }
@@ -50,14 +45,34 @@ public class CatalogoService {
     }
     private Catalogo coletar() {
         String schemas = config.schemas().stream().map(CatalogoService::literal).reduce((a,b) -> a + "," + b).orElseThrow();
-        var linhas = ler(dialeto.sqlColunas(schemas));
+        var linhas = ler("""
+                SELECT table_schema, table_name, column_name, data_type, is_nullable
+                FROM information_schema.columns
+                WHERE table_schema IN (%s)
+                  AND has_column_privilege(quote_ident(table_schema) || '.' || quote_ident(table_name), column_name, 'SELECT')
+                ORDER BY table_schema, table_name, ordinal_position
+                """.formatted(schemas));
         var tabelas = new LinkedHashMap<String, Tabela>();
         for (var linha : linhas) {
             String schema = texto(linha, 0), nome = texto(linha, 1);
             var tabela = tabelas.computeIfAbsent(schema + "." + nome, k -> new Tabela(schema, nome, new ArrayList<>()));
             tabela.colunas().add(new Coluna(texto(linha, 2), texto(linha, 3), "YES".equals(texto(linha, 4))));
         }
-        var fks = ler(dialeto.sqlChavesEstrangeiras(schemas));
+        // pg_constraint permite ler FKs com a conta SELECT (information_schema.table_constraints
+        // omite constraints de tabelas nas quais o usuário só possui SELECT).
+        var fks = ler("""
+                SELECT ns.nspname, src.relname, a.attname, nt.nspname, dst.relname, b.attname
+                FROM pg_catalog.pg_constraint c
+                JOIN pg_catalog.pg_class src ON src.oid = c.conrelid
+                JOIN pg_catalog.pg_namespace ns ON ns.oid = src.relnamespace
+                JOIN pg_catalog.pg_class dst ON dst.oid = c.confrelid
+                JOIN pg_catalog.pg_namespace nt ON nt.oid = dst.relnamespace
+                JOIN pg_catalog.pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey)
+                JOIN pg_catalog.pg_attribute b ON b.attrelid = c.confrelid
+                  AND b.attnum = c.confkey[array_position(c.conkey, a.attnum)]
+                WHERE c.contype = 'f' AND ns.nspname IN (%s) AND nt.nspname IN (%s)
+                ORDER BY ns.nspname, src.relname, c.conname, a.attnum
+                """.formatted(schemas, schemas));
         var relacoes = new ArrayList<Relacao>();
         for (var linha : fks) {
             String origem = texto(linha, 0) + "." + texto(linha, 1), destino = texto(linha, 3) + "." + texto(linha, 4);
@@ -103,8 +118,8 @@ public class CatalogoService {
         String chave=schema+"."+tabela+"."+coluna;
         var anterior=amostras.get(chave);
         if(anterior!=null&&anterior.expira()>System.currentTimeMillis())return anterior.valor();
-        var resultado=banco.consultar("SELECT DISTINCT " + dialeto.identificador(coluna) + " FROM " + dialeto.identificador(schema) + "." + dialeto.identificador(tabela)
-                + " WHERE " + dialeto.identificador(coluna) + " IS NOT NULL LIMIT " + config.maxAmostras());
+        var resultado=banco.consultar("SELECT DISTINCT " + identificador(coluna) + " FROM " + identificador(schema) + "." + identificador(tabela)
+                + " WHERE " + identificador(coluna) + " IS NOT NULL LIMIT " + config.maxAmostras());
         amostras.entrySet().removeIf(e->e.getValue().expira()<=System.currentTimeMillis());
         if(amostras.size()<128&&(resultado.verificacao()==Verificacao.VALIDO||resultado.verificacao()==Verificacao.VAZIO))
             amostras.put(chave,new CacheAmostra(resultado,System.currentTimeMillis()+ttlMs));
@@ -125,12 +140,13 @@ public class CatalogoService {
         var resultado = banco.consultar(sql);
         if (resultado.verificacao() == Verificacao.VAZIO) return List.of();
         if (resultado.verificacao() != Verificacao.VALIDO)
-            throw ErroApi.configuracao("Não foi possível ler o catálogo completo. Confira permissões e limites do " + dialeto.nome() + ".");
+            throw ErroApi.configuracao("Não foi possível ler o catálogo completo. Confira permissões e limites do PostgreSQL.");
         return resultado.linhas();
     }
     private static boolean temColuna(Tabela t, String coluna) { return t != null && t.colunas().stream().anyMatch(c -> c.nome().equals(coluna)); }
     private static String texto(List<Object> linha, int indice) { return Objects.toString(linha.get(indice)); }
     private static String literal(String s) { return "'" + s.replace("'", "''") + "'"; }
+    private static String identificador(String s) { return "\"" + s.replace("\"", "\"\"") + "\""; }
     private static Set<String> termos(String texto) {
         var resultado = new HashSet<String>();
         for (String termo : Normalizer.normalize(texto.toLowerCase(Locale.ROOT), Normalizer.Form.NFD)

@@ -44,9 +44,9 @@ public class RegistroExecucoes {
     private void auditarChamada(long id, ModeloGateway.Resposta r, String finalidade) {
         inserir("""
                 INSERT INTO chamada_modelo(execucao_id,provedor,modelo,prompt_enviado,resposta,correspondencias_json,
-                tokens_entrada,tokens_saida,latencia_ms,custo_usd,finalidade,temperatura) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
+                tokens_entrada,tokens_saida,latencia_ms,custo_usd,finalidade) VALUES(?,?,?,?,?,?,?,?,?,?,?)
                 """, id, r.provedor(), r.modelo(), r.promptEnviado(), r.texto(), json(r.correspondencias()),
-                r.tokensEntrada(), r.tokensSaida(), r.latenciaMs(), r.custoUsd(), finalidade, r.temperatura());
+                r.tokensEntrada(), r.tokensSaida(), r.latenciaMs(), r.custoUsd(), finalidade);
         db.update("UPDATE execucao SET custo_total_usd=custo_total_usd+? WHERE id=?", r.custoUsd(), id);
     }
 

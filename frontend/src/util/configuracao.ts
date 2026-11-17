@@ -2,8 +2,7 @@ import { chamar } from '../api/httpApi'
 
 export interface Configuracao {
   iaConfigurada: boolean
-  bancoHabilitado: boolean
-  dialetoBanco: string
+  postgresHabilitado: boolean
   jiraConfigurado: boolean
   confluenceConfigurado: boolean
   jiraEscritaHabilitada: boolean

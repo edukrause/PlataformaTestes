@@ -1,8 +1,8 @@
 # Backend e aplicação local
 
-Java 21, Spring Boot 3.5, JDBC, Flyway e H2. O banco do ERP, PostgreSQL ou MySQL, é consultado em modo somente leitura.
-A aplicação funciona sem IA pela entrada manual e pode gerar cenários e SQL com Claude, Gemini e
-Llama/Groq quando as respectivas credenciais forem configuradas.
+Java 21, Spring Boot 3.5, JDBC, Flyway e H2. PostgreSQL é a fonte consultada em modo somente leitura.
+O Claude permanece pendente. A aplicação funciona sem IA pela entrada manual e pode gerar cenários
+e SQL com Gemini e Llama/Groq quando as respectivas credenciais forem configuradas.
 
 ## Executar o aplicativo
 
@@ -43,15 +43,15 @@ Inicie a aplicação de `backend`: ela importa esse arquivo como properties; var
 terminal têm precedência. Não preencha segredos em arquivos versionados.
 
 - **Sem IA:** mantenha `PLATAFORMA_IA_MODO=desativada` e use Execuções → Nova execução → Entrada manual.
-- **Geração:** defina `PLATAFORMA_IA_MODO=externa`, escolha `PLATAFORMA_IA_PROVEDOR=CLAUDE`, `GEMINI` ou `LLAMA`,
+- **Geração:** defina `PLATAFORMA_IA_MODO=externa`, escolha `PLATAFORMA_IA_PROVEDOR=GEMINI` ou `LLAMA`,
   habilite o provedor e informe chave, ID de modelo e preços por milhão de tokens.
-- **Consenso automático:** habilite ao menos dois provedores. Com Claude, Gemini e Llama/Groq participam três
-  famílias: três resultados equivalentes produzem UNANIME e dois, MAIORIA. Com só dois habilitados, o máximo é MAIORIA.
+- **Consenso automático:** habilite Gemini e Llama/Groq. São duas famílias participantes; dois resultados
+  equivalentes produzem MAIORIA. UNANIME continua exigindo três votos. Claude não participa deste fluxo.
 - **Jira:** URL HTTPS, autenticação e API 2/3. `JIRA_STATUS_MAPA` associa IDs de situações ao vocabulário da plataforma.
 - **Confluence:** URL base incluindo `/wiki` no Cloud, autenticação, API 2 (Cloud) ou 1 (REST anterior) e
   `CONFLUENCE_PAGINAS` no formato `ESTOQUE:12345,PROJ-123:67890`. O mapeamento por tarefa prevalece sobre a área.
   Solicitar documentação sem configuração válida produz uma pendência/erro explícito.
-- **Banco do ERP:** `ERP_DIALETO=POSTGRESQL` ou `MYSQL`, conta dedicada somente com SELECT. Veja [PostgreSQL](docs/postgresql.md) e [MySQL](docs/mysql.md).
+- **PostgreSQL:** conta dedicada com SELECT e sem superusuário. Veja [PostgreSQL](docs/postgresql.md).
 - **Domínio:** preencha `DOMINIO_REGRAS` com as regras reais de empresa, filial, cancelados e exclusão lógica.
   O gerador SQL recusa iniciar sem essas regras. O texto orienta o prompt; o analista verifica sua aplicação.
 - **Escrita no Jira:** `JIRA_ESCRITA_HABILITADA=true` habilita ações explícitas na interface.
@@ -60,8 +60,7 @@ terminal têm precedência. Não preencha segredos em arquivos versionados.
 
 Nenhuma chamada aos provedores é feita na inicialização. Preços não são presumidos: configure o preço
 da versão escolhida, incluindo zero somente quando essa for a condição real da sua conta.
-O Claude usa a API de mensagens da Anthropic (`/v1/messages`); como ela não tem modo JSON nativo,
-o contrato é reforçado na instrução de sistema e validado pelo mesmo parser dos demais provedores.
+O adaptador legado de Claude foi preservado, mas sua integração e validação continuam pendentes.
 
 ## Fluxo
 
@@ -69,7 +68,7 @@ o contrato é reforçado na instrução de sistema e validado pelo mesmo parser 
 2. Se solicitado, ler a documentação do Confluence e guardar referência, versão, texto e hash.
 3. Gerar cenários com o modelo escolhido. Validar JSON e Gherkin; refazer uma vez quando inválidos.
    Regressão só é admitida quando documentação funcional foi efetivamente fornecida.
-4. Para cada pergunta de apuração do cenário, selecionar o subesquema e gerar SQL em paralelo com os provedores habilitados.
+4. Para cada pergunta de apuração do cenário, selecionar o subesquema e gerar SQL em paralelo com Gemini e Llama.
    Uma nova tentativa recebe a consulta anterior e o tipo de erro, sem mensagens internas do banco.
 5. Verificar SELECT, EXPLAIN, execução, limites, normalização e consenso. Guardar todas as chamadas e
    seus custos; cada família fornece apenas um candidato final ao consenso.
@@ -92,7 +91,7 @@ Lotes processam até 20 tarefas distintas em sequência, preservando falhas indi
 | POST | `/api/execucoes/manuais` | Criar execução sem Jira ou IA |
 | GET | `/api/execucoes/{id}` | Cenários, apurações, custos e revisão |
 | POST | `/api/execucoes/{id}/apuracoes` | Consultas finais informadas manualmente |
-| POST | `/api/execucoes/{id}/apuracoes/automaticas` | Gerar SQL e apurar com os provedores habilitados |
+| POST | `/api/execucoes/{id}/apuracoes/automaticas` | Gerar SQL e apurar com Gemini/Llama |
 | POST | `/api/execucoes/{id}/revisao` | Conferência e correções por ID de apuração |
 | GET | `/api/execucoes/{id}/revisoes` | Histórico imutável das conferências |
 | PUT | `/api/execucoes/{id}/cenarios/{cenarioId}/execucao` | Registrar teste manual ou desfazer com null |
