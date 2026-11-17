@@ -39,7 +39,7 @@ public class ApuracaoAutomatica {
         if (!execucao.status().equals("CONCLUIDA") || execucao.revisao() != null) throw ErroApi.entrada("Execução não disponível para apuração.");
         if (cenarioId != null && execucao.cenarios().stream().noneMatch(c -> c.id() == cenarioId)) throw ErroApi.entrada("Cenário não pertence à execução.");
         var provedores = modelos.disponiveis();
-        if (provedores.size() < 2) throw ErroApi.configuracao("Habilite Gemini e Llama/Groq para apurar por consenso. Claude permanece pendente.");
+        if (provedores.size() < 2) throw ErroApi.configuracao("Habilite ao menos dois provedores (Claude, Gemini ou Llama/Groq) para apurar por consenso.");
         provedores.forEach(modelos::validar);
         String regras = dominio.contexto(true);
         long inicio = System.nanoTime();

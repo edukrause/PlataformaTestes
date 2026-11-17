@@ -93,9 +93,9 @@ SQL recusado, vazio e erro não votam. Configuração inválida não salva apura
 ## Apuração automática
 
 `POST /api/execucoes/{id}/apuracoes/automaticas` recebe cenarioId opcional, pergunta e preservarOrdem.
-Habilite Gemini e Llama/Groq, configure chaves/modelos/preços e informe as regras em DOMINIO_REGRAS.
+Habilite ao menos dois provedores (Claude, Gemini, Llama/Groq), configure chaves/modelos/preços e informe as regras em DOMINIO_REGRAS.
 O catálogo selecionado é enviado no contexto. Cada provedor gera um SELECT independente; uma consulta
-inválida pode ser refeita uma vez. Não há participação de Claude nesta entrega.
+inválida pode ser refeita uma vez.
 
 Cenários gerados com perguntaApuracao também disparam esse fluxo durante a geração.
 Todas as chamadas são auditadas; tentativas anteriores não ganham votos adicionais.
@@ -119,8 +119,7 @@ Ambiguidade excessiva descarta o candidato, sem hash aproximado. A representaç�
 fundamenta o acordo; o SHA-256 serve à rastreabilidade.
 
 Três iguais produzem UNANIME; dois iguais, MAIORIA; dois ou mais válidos sem acordo, DIVERGENTE;
-menos de dois válidos, FALHA. Sem Claude, o fluxo automático atual pode produzir MAIORIA com os dois
-provedores habilitados. Consenso requer conferência da regra de negócio pelo analista.
+menos de dois válidos, FALHA. Com apenas dois provedores habilitados, o melhor desfecho possível é MAIORIA. Consenso requer conferência da regra de negócio pelo analista.
 Cada candidato usa seu próprio snapshot: dados alterados entre consultas podem gerar divergência.
 
 ## Testes reais

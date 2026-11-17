@@ -20,7 +20,7 @@ como referência quando ao menos dois resultados coincidem. A conferência do an
 2. A plataforma busca o requisito da tarefa e, se pedido, a documentação da rotina no Confluence.
 3. O **Módulo 1** gera os cenários de teste em Gherkin e valida a sintaxe.
 4. Para cada valor que o cenário precisa conferir, o **Módulo 2** pede consultas SQL independentes.
-   Gemini e Llama/Groq estão implementados; Claude permanece pendente para completar as três famílias planejadas.
+   Os adaptadores de Claude, Gemini e Llama/Groq estão implementados.
 5. As consultas passam por um verificador e são executadas no PostgreSQL de homologação, só leitura, com limite
    de tempo e de linhas.
 6. Se pelo menos dois dos três resultados coincidirem, o valor vira a referência do cenário; se não, o
@@ -73,9 +73,9 @@ npx @mermaid-js/mermaid-cli -i docs/diagramas/arquitetura.mmd -o docs/diagramas/
 ## Como executar
 
 O aplicativo local inclui interface e backend no mesmo JAR. É possível criar execuções e informar consultas
-manualmente sem IA, ou gerar cenários e SQL com Gemini/Llama após configurar as integrações.
+manualmente sem IA, ou gerar cenários e SQL com Claude, Gemini e Llama/Groq após configurar as integrações.
 Estão implementados Jira, Confluence, catálogo PostgreSQL, apuração, consenso, correções com histórico,
-lote, exportação CSV e publicação opcional dos cenários aprovados no Jira. Claude permanece pendente.
+lote, exportação CSV e publicação opcional dos cenários aprovados no Jira.
 Implementação e testes simulados não substituem a validação com as credenciais e regras reais do seu ambiente.
 
 Para construir tudo, use `scripts/build.ps1` no Windows ou `sh scripts/build.sh` em Linux/macOS,

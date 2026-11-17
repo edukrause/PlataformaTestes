@@ -42,7 +42,7 @@ def testes():
         ("Catálogo e amostragem", ["banco.CatalogoServiceTest"]),
     ]
     dados = [(rotulo, sum(suites[s] for s in nomes)) for rotulo, nomes in grupos]
-    assert sum(v for _, v in dados) == sum(suites.values()) == 96
+    assert sum(v for _, v in dados) == sum(suites.values()) == 100
     w, x0, x1, alt, y0 = 1000, 470, 930, 34, 30
     maximo = 50
     c = []
@@ -58,7 +58,7 @@ def testes():
         c.append(f'<text x="{x0 + larg + 8}" y="{y + alt / 2 + 6}">{v}</text>')
     base = y0 + len(dados) * (alt + 12)
     c.append(f'<line x1="{x0}" y1="{y0}" x2="{x0}" y2="{base}" stroke="#111" stroke-width="2"/>')
-    c.append(f'<text x="{(x0 + x1) / 2}" y="{base + 54}" text-anchor="middle">Número de testes (total: 96; falhas: 0)</text>')
+    c.append(f'<text x="{(x0 + x1) / 2}" y="{base + 54}" text-anchor="middle">Número de testes (total: 100; falhas: 0)</text>')
     salvar("grafico-testes", w, base + 72, "".join(c))
 
 

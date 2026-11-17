@@ -46,11 +46,17 @@ plataforma:
     max-caracteres: ${ERP_POSTGRES_MAX_CARACTERES:1000000}
   ia:
     provedor: ${PLATAFORMA_IA_PROVEDOR:GEMINI}
-    # Integração com o provedor adiada. api mantém o adaptador existente como opção explícita.
+    # desativada: só entrada manual; externa: gera com o provedor indicado acima (CLAUDE, GEMINI ou LLAMA).
     modo: ${PLATAFORMA_IA_MODO:desativada}
   modelos:
     max-tokens: ${MODELOS_MAX_TOKENS:4096}
     provedores:
+      CLAUDE:
+        habilitado: ${CLAUDE_HABILITADO:false}
+        chave: ${ANTHROPIC_API_KEY:}
+        modelo: ${ANTHROPIC_MODEL:}
+        preco-entrada: ${ANTHROPIC_INPUT_PRICE:}
+        preco-saida: ${ANTHROPIC_OUTPUT_PRICE:}
       GEMINI:
         habilitado: ${GEMINI_HABILITADO:false}
         chave: ${GEMINI_API_KEY:}
@@ -74,13 +80,6 @@ plataforma:
     auth-mode: ${JIRA_AUTH_MODE:basic}
     # Campo customizado opcional que identifica a área. Sem ele, o classificador usa o requisito.
     area-field: ${JIRA_AREA_FIELD:}
-  claude:
-    api-key: ${ANTHROPIC_API_KEY:}
-    model: ${ANTHROPIC_MODEL:}
-    max-tokens: ${ANTHROPIC_MAX_TOKENS:4096}
-    # Preços da versão escolhida, em USD por milhão de tokens. Não presumir preço zero.
-    input-price: ${ANTHROPIC_INPUT_PRICE:}
-    output-price: ${ANTHROPIC_OUTPUT_PRICE:}
   privacy:
     # Nomes conhecidos separados por ;. O filtro por padrões não identifica nomes arbitrários.
     sensitive-terms: ${SENSITIVE_TERMS:}

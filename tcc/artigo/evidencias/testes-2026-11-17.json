@@ -1,5 +1,5 @@
 {
-  "nota": "Suite da versao original (codigo igual ao commit b0badbb), executada em 17/11/2026 com PostgreSQL 16.4 local e descartavel.",
+  "nota": "Suite com a integracao Claude (commit a721cbf reaplicado), executada em 17/11/2026 com PostgreSQL 16.4 local e descartavel.",
   "suites": [
     {
       "suite": "FluxoApiTest",
@@ -17,7 +17,7 @@
     },
     {
       "suite": "IntegracoesHttpTest",
-      "tests": 6,
+      "tests": 9,
       "failures": 0,
       "errors": 0,
       "skipped": 0
@@ -31,7 +31,7 @@
     },
     {
       "suite": "PlataformaCompletaTest",
-      "tests": 11,
+      "tests": 12,
       "failures": 0,
       "errors": 0,
       "skipped": 0

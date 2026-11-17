@@ -5,7 +5,7 @@ O artigo em `artigo.docx`/`artigo.pdf` é a **versão preliminar**: relata const
 
 ## Dependem de acesso ou de pessoas (bloqueiam Resultados e Discussão finais)
 
-1. **Credenciais dos provedores** (Gemini e Groq; Claude pendente de homologação): chave, ID do modelo fixado, preços na data e
+1. **Credenciais dos provedores** (Claude, Gemini e Groq): chave, ID do modelo fixado, preços na data e
    modalidade da conta (retenção/treinamento) reconferida. Configurar em `backend/.env` com `PLATAFORMA_IA_MODO=externa`.
 2. **Banco**: a plataforma lê só PostgreSQL; o ERP usa MySQL, então o adaptador MySQL é passo do TCC II, com conta
    somente SELECT na homologação.
@@ -31,7 +31,7 @@ Conferido em 16/11/2026. Os templates são os mesmos de `tcc/continuidade/modelo
 (resumo, Seções 1 a 6, quadro comparativo com "Este trabalho", enfoque, etapas, validação) atende ao escopo.
 Ficam em aberto, fora do texto do artigo:
 
-- **E8**: resultados = o sistema funcionando: suíte original de 96 testes, sem falhas (Figura 4), em `evidencias/testes-2026-11-17.json`.
+- **E8**: resultados = o sistema funcionando: suíte de 100 testes, sem falhas (Figura 4), em `evidencias/testes-2026-11-17.json`.
 - **E9**: falta o vídeo da demonstração e o ensaio, que são do autor.
 - Referências: 25, todas citadas.
 
